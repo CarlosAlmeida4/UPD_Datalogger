@@ -45,6 +45,7 @@ void DataClientLayer::OnUIRender()
 
 	m_Console.OnUIRender();
 	UI_ClientList();
+	ImGui::ShowDemoWindow();
 }
 
 bool DataClientLayer::IsConnected() const
@@ -78,6 +79,9 @@ void DataClientLayer::UI_ConnectionModal()
 		ImGui::Text("Server Address");
 		ImGui::InputText("##address", &m_ServerIP);
 		ImGui::SameLine();
+		ImGui::Text("Port");
+		ImGui::InputText("##address", &m_ServerPort);
+		ImGui::SameLine();
 		if (ImGui::Button("Connect"))
 		{
 			m_Color = IM_COL32(m_ColorBuffer[0] * 255.0f, m_ColorBuffer[1] * 255.0f, m_ColorBuffer[2] * 255.0f, m_ColorBuffer[3] * 255.0f);
@@ -92,7 +96,7 @@ void DataClientLayer::UI_ConnectionModal()
 				auto ipTokens = Walnut::Utils::SplitString(m_ServerIP, ':'); // [0] == hostname, [1] (optional) == port
 				std::string serverIP = Walnut::Utils::ResolveDomainName(ipTokens[0]);
 				if (ipTokens.size() != 2)
-					serverIP = fmt::format("{}:{}", serverIP, 8192); // Add default port if hostname doesn't contain port
+					serverIP = fmt::format("{}:{}", serverIP, stoi(m_ServerPort)); // Add default port if hostname doesn't contain port
 				else
 					serverIP = fmt::format("{}:{}", serverIP, ipTokens[1]); // Add specified port
 

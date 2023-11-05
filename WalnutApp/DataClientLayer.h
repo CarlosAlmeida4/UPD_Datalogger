@@ -38,6 +38,7 @@ private:
 	std::unique_ptr<Walnut::Client> m_Client;
 	Walnut::UI::Console m_Console{ "Chat" };
 	std::string m_ServerIP;
+	std::string m_ServerPort;
 	std::filesystem::path m_ConnectionDetailsFilePath = "ConnectionDetails.yaml";
 
 	Walnut::Buffer m_ScratchBuffer;
