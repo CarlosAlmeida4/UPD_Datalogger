@@ -1,4 +1,4 @@
-project "App-Client"
+project "App-Datalogger"
    kind "ConsoleApp"
    language "C++"
    cppdialect "C++20"

@@ -1,5 +1,5 @@
 -- premake5.lua
-workspace "Walnut-Chat"
+workspace "WalnutUDPDatalogger"
    architecture "x64"
    configurations { "Debug", "Release", "Dist" }
    startproject "WalnutApp"
