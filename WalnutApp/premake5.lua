@@ -16,12 +16,26 @@ project "WalnutApp"
       "../Walnut/Walnut/src",
 
       "%{IncludeDir.VulkanSDK}",
+	  
+	  "../Walnut/vendor/spdlog/include",
+      "../Walnut/vendor/yaml-cpp/include",
+	  
+	        -- Walnut-Networking
+      "../Walnut/Walnut-Modules/Walnut-Networking/Source",
+      "../Walnut/Walnut-Modules/Walnut-Networking/vendor/GameNetworkingSockets/include"
+	  
    }
 
    links
    {
-       "Walnut"
+       "Walnut",
+	   "yaml-cpp",
    }
+   
+   	defines
+	{
+		"YAML_CPP_STATIC_DEFINE"
+	}
 
    targetdir ("../bin/" .. outputdir .. "/%{prj.name}")
    objdir ("../bin-int/" .. outputdir .. "/%{prj.name}")
@@ -29,6 +43,13 @@ project "WalnutApp"
    filter "system:windows"
       systemversion "latest"
       defines { "WL_PLATFORM_WINDOWS" }
+	  
+	  postbuildcommands 
+	  {
+	    '{COPY} "../%{WalnutNetworkingBinDir}/GameNetworkingSockets.dll" "%{cfg.targetdir}"',
+	    '{COPY} "../%{WalnutNetworkingBinDir}/libcrypto-3-x64.dll" "%{cfg.targetdir}"',
+	    '{COPY} "../%{WalnutNetworkingBinDir}/libprotobufd.dll" "%{cfg.targetdir}"',
+	  }
 
    filter "configurations:Debug"
       defines { "WL_DEBUG" }
