@@ -23,6 +23,7 @@ private:
 	// UI
 	void UI_ConnectionModal();
 	void UI_ClientList();
+	void ConnectButton();
 
 	// Server event callbacks
 	void OnConnected();
