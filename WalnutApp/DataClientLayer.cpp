@@ -15,60 +15,41 @@
 #include <iostream>
 #include <fstream>
 
+#include "UDPClient.h"
+
+UDPClient lUDPClient("127.0.0.1", 20777);
 
 void DataClientLayer::OnAttach()
 {
-	m_ScratchBuffer.Allocate(1024);
 
-	m_Client = std::make_unique<Walnut::Client>();
-	m_Client->SetServerConnectedCallback([this]() { OnConnected(); });
-	m_Client->SetServerDisconnectedCallback([this]() { OnDisconnected(); });
-	m_Client->SetDataReceivedCallback([this](const Walnut::Buffer data) { OnDataReceived(data); });
-
-	m_Console.SetMessageSendCallback([this](std::string_view message) { SendChatMessage(message); });
-
-	LoadConnectionDetails(m_ConnectionDetailsFilePath);
 }
 
 void DataClientLayer::OnDetach()
 {
-	m_Client->Disconnect();
-	// ^ currently disconnect is blocking
 
-	m_ScratchBuffer.Release();
 }
 
 
 void DataClientLayer::OnUIRender()
 {
-	//UI_ConnectionModal();
-
-	m_Console.OnUIRender();
-	UI_ClientList();
-	ImGui::ShowDemoWindow();
+	//m_Console.OnUIRender();
+	//ImGui::ShowDemoWindow();
 	ConnectButton();
+
+	
+	if (!lUDPClient.isRunning_b)
+	{
+		lUDPClient.startClient();
+	}
+
 }
 
 void DataClientLayer::ConnectButton() {
 	ImGui::Begin("Hello");
 	bool ConnectionPressed = ImGui::Button("Button");
 	ImGui::End();
-	if (ConnectionPressed)
-	{
-		std::cout << "Start Connection" << std::endl;
-		m_ServerIP = "127.0.0.1";
 
-		// Try resolve domain name
-		auto ipTokens = Walnut::Utils::SplitString(m_ServerIP, ':'); // [0] == hostname, [1] (optional) == port
-		std::string serverIP = Walnut::Utils::ResolveDomainName(ipTokens[0]);
-		if (ipTokens.size() != 2)
-			serverIP = fmt::format("{}:{}", serverIP, 20777); // Add default port if hostname doesn't contain port
-		else
-			serverIP = fmt::format("{}:{}", serverIP, ipTokens[1]); // Add specified port
 
-		m_Client->ConnectToServer(serverIP);
-	
-	}
 }
 
 
