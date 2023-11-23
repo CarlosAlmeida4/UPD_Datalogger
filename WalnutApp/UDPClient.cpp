@@ -4,9 +4,10 @@
 #include <WS2tcpip.h>
 
 #include "DirtTwo.h"
+#include "EASportsWRC.h"
 
 DirtTwo l_DirtTwo;
-
+EASportsWRC l_EASportsWRC;
 
 
 int UDPClient::startClient()
@@ -78,13 +79,13 @@ void UDPClient::receiveData()
         else {
             //buffer[bytesRead] = '\0';
             //std::cout << "Size of buffer" << bytesRead << std::endl;
-            if (bytesRead == 264) //Full size packet for Dirt Rally 2
+            if (bytesRead <= 264) //Full size packet for Dirt Rally 2
             {
                 //check if firts activation
-                if (!l_DirtTwo.GetOnStage()) l_DirtTwo.StartStage();
-                memcpy(l_DirtTwo.UDPReceiveArray.data(), buffer, sizeof(buffer));
+                if (!l_EASportsWRC.GetOnStage()) l_EASportsWRC.StartStage();
+                memcpy(l_EASportsWRC.UDPReceiveArray.data(), buffer, sizeof(buffer));
                 //std::cout << "Received message from client: " << l_DirtTwo.UDPReceiveArray.data() << std::endl;
-                l_DirtTwo.HandleArray();
+                l_EASportsWRC.HandleArray();
             }
             else
             {

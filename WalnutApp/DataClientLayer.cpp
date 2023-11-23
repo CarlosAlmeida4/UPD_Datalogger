@@ -17,7 +17,7 @@
 
 #include "UDPClient.h"
 
-UDPClient lUDPClient("127.0.0.1", 20777);
+UDPClient lUDPClient("127.0.0.1", 20782);
 
 void DataClientLayer::OnAttach()
 {
