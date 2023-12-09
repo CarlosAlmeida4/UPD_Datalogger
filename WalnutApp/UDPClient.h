@@ -5,7 +5,13 @@
 #include <string>
 #include <thread>
 
+#include "DirtTwo.h"
+#include "EASportsWRC.h"
+
 #pragma comment(lib, "ws2_32.lib")
+
+extern DirtTwo l_DirtTwo;
+extern EASportsWRC l_EASportsWRC;
 
 class UDPClient
 {

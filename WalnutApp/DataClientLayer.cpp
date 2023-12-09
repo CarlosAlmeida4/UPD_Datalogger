@@ -33,10 +33,10 @@ void DataClientLayer::OnDetach()
 void DataClientLayer::OnUIRender()
 {
 	//m_Console.OnUIRender();
-	//ImGui::ShowDemoWindow();
-	ConnectButton();
-
-	
+	ImGui::ShowDemoWindow();
+	//ConnectButton();
+	DriverInputs();
+	StageStatus();
 	if (!lUDPClient.isRunning_b)
 	{
 		lUDPClient.startClient();
@@ -51,6 +51,49 @@ void DataClientLayer::ConnectButton() {
 
 
 }
+
+void DataClientLayer::DriverInputs()
+{
+	ImGui::Begin("Driver Inputs");
+	char buf[32];
+
+	//*******************************Throttle
+	sprintf(buf, "%d/%d", (int)(l_EASportsWRC.data.throttle*100), 100);
+	ImGui::ProgressBar(l_EASportsWRC.data.throttle, ImVec2(0.0f, 0.0f),buf);
+	ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+	ImGui::Text("Accel");
+	//*******************************Brake
+	sprintf(buf, "%d/%d", (int)(l_EASportsWRC.data.brake * 100), 100);
+	ImGui::ProgressBar(l_EASportsWRC.data.brake, ImVec2(0.0f, 0.0f), buf);
+	ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+	ImGui::Text("Brake");
+	//*******************************Clutch
+	sprintf(buf, "%d/%d", (int)(l_EASportsWRC.data.clutch * 100), 100);
+	ImGui::ProgressBar(l_EASportsWRC.data.clutch, ImVec2(0.0f, 0.0f), buf);
+	ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+	ImGui::Text("Clutch");
+	//*******************************Steering
+	sprintf(buf, "%d", (int)(l_EASportsWRC.data.stear));
+	ImGui::SliderFloat("Steering", &l_EASportsWRC.data.stear, -1.0f, 1.0f, "%.3f", 1);
+
+	
+	ImGui::End();
+}
+
+void DataClientLayer::StageStatus()
+{
+	ImGui::Begin("Stage Status");
+	char buf[32];
+
+	//*******************************Stage current distance
+	sprintf(buf, "%d/%d", (int)(l_EASportsWRC.data.lap_distance), (int)l_EASportsWRC.data.track_length);
+	ImGui::ProgressBar(l_EASportsWRC.data.lap_distance, ImVec2(0.0f, 0.0f), buf);
+	ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+	ImGui::Text("Distance");
+
+	ImGui::End();
+}
+
 
 
 bool DataClientLayer::IsConnected() const

@@ -12,14 +12,15 @@ void EASportsWRC::HandleArray()
 {
 	data.speed = UnpackArray(EAoffset_t::vehicle_speed);
 	data.gear = UnpackArray(EAoffset_t::vehicle_gear_index);
-	//data.stear = UnpackArray(EAoffset_t::INPUT_STEER);
-	//data.clutch = UnpackArray(EAoffset_t::INPUT_CLUTCH);
-	//data.brake = UnpackArray(EAoffset_t::INPUT_BRAKE);
-	//data.throttle = UnpackArray(EAoffset_t::INPUT_THROTTLE);
-	//data.rpm = UnpackArray(EAoffset_t::ENGINE_RATE) * 10;
-	//data.max_rpm = UnpackArray(EAoffset_t::MAX_RPM) * 10;
-	//data.track_length = UnpackArray(EAoffset_t::TRACK_LENGTH);
-	//data.lap_distance = UnpackArray(EAoffset_t::DISTANCE_LAP);
+	data.stear = UnpackArray(EAoffset_t::vehicle_steering);
+	data.clutch = UnpackArray(EAoffset_t::vehicle_clutch);
+	data.brake = UnpackArray(EAoffset_t::vehicle_brake);
+	data.throttle = UnpackArray(EAoffset_t::vehicle_throttle);
+	data.rpm = UnpackArray(EAoffset_t::vehicle_engine_rpm_current);
+	data.max_rpm = UnpackArray(EAoffset_t::vehicle_engine_rpm_max);
+	data.track_length = UnpackArray(EAoffset_t::stage_length);
+	data.lap_distance = UnpackArray(EAoffset_t::stage_current_distance);
+	data.current_time = UnpackArray(EAoffset_t::stage_current_time);
 	PrintArray();
 }
 
@@ -49,7 +50,7 @@ float EASportsWRC::UnpackArray(EAoffset_t offset)
 
 void EASportsWRC::PrintArray()
 {
-	std::cout << "Speed    : " << (data.speed*3.6) << "\n" << std::flush;
+	//std::cout << "Speed    : " << (data.speed*3.6) << "\n" << std::flush;
 	//std::cout << "Gear     : " << data.gear     << "\n" << std::flush;
 	//std::cout << "Stear    : " << data.stear    << "\n" << std::flush;
 	//std::cout << "Clutch   : " << data.clutch   << "\n" << std::flush;
@@ -57,4 +58,6 @@ void EASportsWRC::PrintArray()
 	//std::cout << "Throttle : " << data.throttle << "\n" << std::flush;
 	//std::cout << "RPM      : " << data.rpm      << "\n" << std::flush;
 	//std::cout << "max_rpm  : " << data.max_rpm  << "\n" << std::flush;
+	std::cout << "Tracj Distance: " << data.track_length<< "\n" << std::flush;
+
 }

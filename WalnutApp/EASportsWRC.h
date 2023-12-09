@@ -77,6 +77,7 @@ struct EAtelemetry_data_t {
 	float track_length;
 	float lap_distance;
 	float handbrake;
+	float current_time;
 };
 
 

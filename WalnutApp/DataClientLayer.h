@@ -29,8 +29,11 @@ private:
 	void OnConnected();
 	void OnDisconnected();
 	void OnDataReceived(const Walnut::Buffer buffer);
-
 	void SendChatMessage(std::string_view message);
+	
+	//Output Windows
+	void DriverInputs();
+	void StageStatus();
 
 private:
 	void SaveConnectionDetails(const std::filesystem::path& filepath);
