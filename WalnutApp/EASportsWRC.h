@@ -61,7 +61,7 @@ enum class EAoffset_t : uint16_t {
 	game_frame_count = 213,
 	stage_current_time = 221,
 	stage_current_distance = 225,
-	stage_length = 229
+	stage_length = 233
 
 };
 
@@ -74,10 +74,13 @@ struct EAtelemetry_data_t {
 	float throttle;
 	float rpm;
 	float max_rpm;
-	float track_length;
-	float lap_distance;
+	double track_length;
+	double lap_distance;
 	float handbrake;
 	float current_time;
+	float game_total_time;
+	float game_delta_time;
+	float game_frame_count;
 };
 
 
@@ -95,6 +98,7 @@ class EASportsWRC
 		bool GetOnStage();
 		void SetOnStage(bool value);
 		float UnpackArray(EAoffset_t offset);
+		double dUnpackArray(EAoffset_t offset);
 		void HandleArray();
 	private:
 		void PrintArray();

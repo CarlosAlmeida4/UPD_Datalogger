@@ -18,10 +18,15 @@ void EASportsWRC::HandleArray()
 	data.throttle = UnpackArray(EAoffset_t::vehicle_throttle);
 	data.rpm = UnpackArray(EAoffset_t::vehicle_engine_rpm_current);
 	data.max_rpm = UnpackArray(EAoffset_t::vehicle_engine_rpm_max);
-	data.track_length = UnpackArray(EAoffset_t::stage_length);
-	data.lap_distance = UnpackArray(EAoffset_t::stage_current_distance);
+	data.track_length = dUnpackArray(EAoffset_t::stage_length);
+	data.lap_distance = dUnpackArray(EAoffset_t::stage_current_distance);
 	data.current_time = UnpackArray(EAoffset_t::stage_current_time);
-	PrintArray();
+	data.handbrake = UnpackArray(EAoffset_t::vehicle_handbrake);
+	data.game_total_time = UnpackArray(EAoffset_t::game_total_time);
+	data.game_delta_time = UnpackArray(EAoffset_t::game_delta_time);
+	data.game_frame_count = UnpackArray(EAoffset_t::game_frame_count);
+
+	//PrintArray();
 }
 
 void EASportsWRC::StartStage()
@@ -48,6 +53,14 @@ float EASportsWRC::UnpackArray(EAoffset_t offset)
 	return data;
 }
 
+double EASportsWRC::dUnpackArray(EAoffset_t offset)
+{
+	// data use little endian
+	double data;
+	std::memcpy(&data, UDPReceiveArray.data() + to_underlying(offset), 8);
+	return data;
+}
+
 void EASportsWRC::PrintArray()
 {
 	//std::cout << "Speed    : " << (data.speed*3.6) << "\n" << std::flush;
@@ -58,6 +71,13 @@ void EASportsWRC::PrintArray()
 	//std::cout << "Throttle : " << data.throttle << "\n" << std::flush;
 	//std::cout << "RPM      : " << data.rpm      << "\n" << std::flush;
 	//std::cout << "max_rpm  : " << data.max_rpm  << "\n" << std::flush;
-	std::cout << "Tracj Distance: " << data.track_length<< "\n" << std::flush;
+	//std::cout << "Tracj Distance: " << data.track_length<< "\n" << std::flush;
+	//std::cout << "Handbrake: " << data.handbrake<< "\n" << std::flush;
+	//std::cout << "game total time: " << data.game_total_time<< "\n" << std::flush;
+	//std::cout << "game_delta_time : " << data.game_delta_time<< "\n" << std::flush;
+	//std::cout << "game_frame_count: " << data.game_frame_count<< "\n" << std::flush;
+	//std::cout << "stage_current_time: " << data.current_time << "\n" << std::flush;
+	//std::cout << "stage_current_distance: " << data.lap_distance << "\n" << std::flush;
+	std::cout << "stage_length: " << data.track_length << "\n" << std::flush;
 
 }

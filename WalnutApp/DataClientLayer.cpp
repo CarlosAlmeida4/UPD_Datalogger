@@ -84,10 +84,10 @@ void DataClientLayer::StageStatus()
 {
 	ImGui::Begin("Stage Status");
 	char buf[32];
-
+	float progression = (float)(l_EASportsWRC.data.lap_distance / l_EASportsWRC.data.track_length);
 	//*******************************Stage current distance
 	sprintf(buf, "%d/%d", (int)(l_EASportsWRC.data.lap_distance), (int)l_EASportsWRC.data.track_length);
-	ImGui::ProgressBar(l_EASportsWRC.data.lap_distance, ImVec2(0.0f, 0.0f), buf);
+	ImGui::ProgressBar(progression, ImVec2(0.0f, 0.0f), buf);
 	ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 	ImGui::Text("Distance");
 
