@@ -1,7 +1,5 @@
 #include "DataClientLayer.h"
 
-#include "ServerPacket.h"
-
 #include "Walnut/Application.h"
 #include "Walnut/UI/UI.h"
 #include "Walnut/Serialization/BufferStream.h"
@@ -83,127 +81,31 @@ void DataClientLayer::DriverInputs()
 void DataClientLayer::StageStatus()
 {
 	ImGui::Begin("Stage Status");
+	
+	//*******************************Stage current distance
 	char buf[32];
 	float progression = (float)(l_EASportsWRC.data.lap_distance / l_EASportsWRC.data.track_length);
-	//*******************************Stage current distance
 	sprintf(buf, "%d/%d", (int)(l_EASportsWRC.data.lap_distance), (int)l_EASportsWRC.data.track_length);
 	ImGui::ProgressBar(progression, ImVec2(0.0f, 0.0f), buf);
 	ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 	ImGui::Text("Distance");
 
+	//*******************************Stage Time
+	int displayCurrentMinutes = (int)l_EASportsWRC.data.current_minutes;
+	int displayCurrentSeconds = (int)l_EASportsWRC.data.current_seconds;
+	float displayMicroSeconds = (l_EASportsWRC.data.current_seconds - (int)l_EASportsWRC.data.current_seconds)*1000;
+	ImGui::Text("Current Time: %d : %d : %1.0f", displayCurrentMinutes, displayCurrentSeconds , displayMicroSeconds);
+
 	ImGui::End();
 }
 
 
-
-bool DataClientLayer::IsConnected() const
-{
-	return m_Client->GetConnectionStatus() == Walnut::Client::ConnectionStatus::Connected;
-}
 
 void DataClientLayer::OnDisconnectButton()
 {
 	m_Client->Disconnect();
 }
 
-
-void DataClientLayer::UI_ConnectionModal()
-{
-	if (!m_ConnectionModalOpen && m_Client->GetConnectionStatus() != Walnut::Client::ConnectionStatus::Connected)
-	{
-		ImGui::OpenPopup("Connect to server");
-	}
-
-	m_ConnectionModalOpen = ImGui::BeginPopupModal("Connect to server", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-	if (m_ConnectionModalOpen)
-	{
-		ImGui::Text("Your Name");
-		ImGui::InputText("##username", &m_Username);
-
-		ImGui::Text("Pick a color");
-		ImGui::SameLine();
-		ImGui::ColorEdit4("##color", m_ColorBuffer);
-
-		ImGui::Text("Server Address");
-		ImGui::InputText("##address", &m_ServerIP);
-		ImGui::SameLine();
-		//ImGui::Text("Port");
-		//ImGui::InputText("##address", &m_ServerPort);
-		//ImGui::SameLine();
-		if (ImGui::Button("Connect"))
-		{
-			m_Color = IM_COL32(m_ColorBuffer[0] * 255.0f, m_ColorBuffer[1] * 255.0f, m_ColorBuffer[2] * 255.0f, m_ColorBuffer[3] * 255.0f);
-
-			if (Walnut::Utils::IsValidIPAddress(m_ServerIP))
-			{
-				m_Client->ConnectToServer(m_ServerIP);
-			}
-			else
-			{
-				// Try resolve domain name
-				auto ipTokens = Walnut::Utils::SplitString(m_ServerIP, ':'); // [0] == hostname, [1] (optional) == port
-				std::string serverIP = Walnut::Utils::ResolveDomainName(ipTokens[0]);
-				if (ipTokens.size() != 2)
-					serverIP = fmt::format("{}:{}", serverIP, stoi(m_ServerPort)); // Add default port if hostname doesn't contain port
-				else
-					serverIP = fmt::format("{}:{}", serverIP, ipTokens[1]); // Add specified port
-
-				m_Client->ConnectToServer(serverIP);
-			}
-
-		}
-
-		if (Walnut::UI::ButtonCentered("Quit"))
-			Walnut::Application::Get().Close();
-
-		if (m_Client->GetConnectionStatus() == Walnut::Client::ConnectionStatus::Connected)
-		{
-			// Send username
-			Walnut::BufferStreamWriter stream(m_ScratchBuffer);
-			stream.WriteRaw<PacketType>(PacketType::ClientConnectionRequest);
-			stream.WriteRaw<uint32_t>(m_Color); // Color
-			stream.WriteString(m_Username); // Username
-
-			m_Client->SendBuffer(stream.GetBuffer());
-
-			SaveConnectionDetails(m_ConnectionDetailsFilePath);
-
-			// Wait for response
-			ImGui::CloseCurrentPopup();
-		}
-		else if (m_Client->GetConnectionStatus() == Walnut::Client::ConnectionStatus::FailedToConnect)
-		{
-			ImGui::TextColored(ImVec4(0.9f, 0.2f, 0.1f, 1.0f), "Connection failed.");
-			const auto& debugMessage = m_Client->GetConnectionDebugMessage();
-			if (!debugMessage.empty())
-				ImGui::TextColored(ImVec4(0.9f, 0.2f, 0.1f, 1.0f), debugMessage.c_str());
-		}
-		else if (m_Client->GetConnectionStatus() == Walnut::Client::ConnectionStatus::Connecting)
-		{
-			ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "Connecting...");
-		}
-
-		ImGui::EndPopup();
-	}
-}
-
-void DataClientLayer::UI_ClientList()
-{
-	ImGui::Begin("Users Online");
-	ImGui::Text("Online: %d", m_ConnectedClients.size());
-
-	static bool selected = false;
-	for (const auto& [username, clientInfo] : m_ConnectedClients)
-	{
-		if (username.empty())
-			continue;
-
-		ImGui::PushStyleColor(ImGuiCol_Text, ImColor(clientInfo.Color).Value);
-		ImGui::Selectable(username.c_str(), &selected);
-		ImGui::PopStyleColor();
-	}
-	ImGui::End();
-}
 
 void DataClientLayer::OnConnected()
 {
@@ -216,151 +118,6 @@ void DataClientLayer::OnDisconnected()
 	m_Console.AddItalicMessageWithColor(0xff8a8a8a, "Lost connection to server!");
 }
 
-void DataClientLayer::OnDataReceived(const Walnut::Buffer buffer)
-{
-	Walnut::BufferStreamReader stream(buffer);
-
-	PacketType type;
-	stream.ReadRaw<PacketType>(type);
-
-	switch (type)
-	{
-	case PacketType::Message:
-	{
-		std::string fromUsername, message;
-		stream.ReadString(fromUsername);
-		stream.ReadString(message);
-
-		// Find user
-		if (m_ConnectedClients.contains(fromUsername))
-		{
-			const auto& clientInfo = m_ConnectedClients.at(fromUsername);
-			m_Console.AddTaggedMessageWithColor(clientInfo.Color, fromUsername, message);
-		}
-		else if (fromUsername == "SERVER") // special message from server
-		{
-			m_Console.AddTaggedMessage(fromUsername, message);
-		}
-		else
-		{
-			std::cout << "[ERROR] Message from unknown user? This shouldn't happen..." << std::endl;
-			// display message anyway
-			m_Console.AddTaggedMessage(fromUsername, message);
-		}
-
-		break;
-	}
-	case PacketType::ClientConnectionRequest:
-	{
-		bool requestStatus;
-		stream.ReadRaw<bool>(requestStatus);
-		if (requestStatus)
-		{
-			// Defer connection message to after message history is received
-			m_ShowSuccessfulConnectionMessage = true;
-			// m_Console.AddItalicMessageWithColor(0xff8a8a8a, "Successfully connected to {} with username {}", m_ServerIP, m_Username);
-		}
-		else
-		{
-			m_Console.AddItalicMessageWithColor(0xfffa4a4a, "Server rejected connection with username {}", m_Username);
-		}
-		break;
-	}
-	case PacketType::ConnectionStatus:
-		break;
-	case PacketType::ClientList:
-	{
-		std::vector<UserInfo> clientList;
-		stream.ReadArray(clientList);
-
-		// Update our client list
-		m_ConnectedClients.clear();
-		for (const auto& client : clientList)
-			m_ConnectedClients[client.Username] = client;
-
-		break;
-	}
-	case PacketType::ClientConnect:
-	{
-		UserInfo newClient;
-		stream.ReadObject(newClient);
-
-		m_ConnectedClients[newClient.Username] = newClient;
-		m_Console.AddItalicMessageWithColor(newClient.Color, "Welcome {}!", newClient.Username);
-
-		break;
-	}
-	case PacketType::ClientUpdate:
-		break;
-	case PacketType::ClientDisconnect:
-	{
-		UserInfo disconnectedClient;
-		stream.ReadObject(disconnectedClient);
-
-		m_ConnectedClients.erase(disconnectedClient.Username);
-		m_Console.AddItalicMessageWithColor(disconnectedClient.Color, "Goodbye {}!", disconnectedClient.Username);
-		break;
-	}
-	case PacketType::ClientUpdateResponse:
-		break;
-	case PacketType::MessageHistory:
-	{
-		std::vector<ChatMessage> messageHistory;
-		stream.ReadArray(messageHistory);
-		for (const auto& message : messageHistory)
-		{
-			// find user color if connected
-			uint32_t userColor = 0xffffffff;
-			if (m_ConnectedClients.contains(message.Username))
-				userColor = m_ConnectedClients.at(message.Username).Color;
-
-			m_Console.AddTaggedMessageWithColor(userColor, message.Username, message.Message);
-		}
-
-		if (m_ShowSuccessfulConnectionMessage)
-		{
-			m_ShowSuccessfulConnectionMessage = false;
-			m_Console.AddItalicMessageWithColor(0xff8a8a8a, "Successfully connected to {} with username {}", m_ServerIP, m_Username);
-		}
-
-		break;
-	}
-	case PacketType::ServerShutdown:
-	{
-		m_Console.AddItalicMessage("Server is shutting down... goodbye!");
-		m_Client->Disconnect();
-		break;
-	}
-	case PacketType::ClientKick:
-	{
-		m_Console.AddItalicMessage("You have been kicked by server!");
-		std::string reason;
-		stream.ReadString(reason);
-		if (!reason.empty())
-			m_Console.AddItalicMessage("Reason: {}", reason);
-
-		m_Client->Disconnect();
-		break;
-	}
-	default:
-		break;
-	}
-}
-
-void DataClientLayer::SendChatMessage(std::string_view message)
-{
-	std::string messageToSend(message);
-	if (IsValidMessage(messageToSend))
-	{
-		Walnut::BufferStreamWriter stream(m_ScratchBuffer);
-		stream.WriteRaw<PacketType>(PacketType::Message);
-		stream.WriteString(messageToSend);
-		m_Client->SendBuffer(stream.GetBuffer());
-
-		// echo in own console
-		m_Console.AddTaggedMessageWithColor(m_Color | 0xff000000, m_Username, messageToSend);
-	}
-}
 
 void DataClientLayer::SaveConnectionDetails(const std::filesystem::path& filepath)
 {

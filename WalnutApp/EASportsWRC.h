@@ -78,6 +78,8 @@ struct EAtelemetry_data_t {
 	double lap_distance;
 	float handbrake;
 	float current_time;
+	float current_minutes;
+	float current_seconds;
 	float game_total_time;
 	float game_delta_time;
 	float game_frame_count;
@@ -102,6 +104,7 @@ class EASportsWRC
 		void HandleArray();
 	private:
 		void PrintArray();
+		void convertSeconds2Time();
 
 };
 

@@ -25,7 +25,8 @@ void EASportsWRC::HandleArray()
 	data.game_total_time = UnpackArray(EAoffset_t::game_total_time);
 	data.game_delta_time = UnpackArray(EAoffset_t::game_delta_time);
 	data.game_frame_count = UnpackArray(EAoffset_t::game_frame_count);
-
+	
+	convertSeconds2Time();
 	//PrintArray();
 }
 
@@ -80,4 +81,12 @@ void EASportsWRC::PrintArray()
 	//std::cout << "stage_current_distance: " << data.lap_distance << "\n" << std::flush;
 	std::cout << "stage_length: " << data.track_length << "\n" << std::flush;
 
+}
+
+void EASportsWRC::convertSeconds2Time()
+{
+	//float current_time = data.current_time;
+	data.current_seconds = std::fmod(data.current_time,60);
+	data.current_minutes = data.current_time / 60;
+	//data.current_seconds = data.current_time % 60;
 }

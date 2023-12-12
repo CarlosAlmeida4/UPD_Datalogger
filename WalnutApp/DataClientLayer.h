@@ -4,7 +4,6 @@
 
 #include "Walnut/UI/Console.h"
 
-#include "UserInfo.h"
 
 #include <set>
 #include <filesystem>
@@ -52,7 +51,6 @@ private:
 	std::string m_Username;
 	uint32_t m_Color = 0xffffffff;
 
-	std::map<std::string, UserInfo> m_ConnectedClients;
 	bool m_ConnectionModalOpen = false;
 	bool m_ShowSuccessfulConnectionMessage = false;
 };
