@@ -8,6 +8,8 @@
 #include <set>
 #include <filesystem>
 
+#include "ImPlot/implot.h"
+
 
 class DataClientLayer : public Walnut::Layer
 {

@@ -15,6 +15,8 @@
 
 #include "UDPClient.h"
 
+#include "ImPlot/implot.h"
+
 UDPClient lUDPClient("127.0.0.1", 20782);
 
 void DataClientLayer::OnAttach()
@@ -39,7 +41,7 @@ void DataClientLayer::OnUIRender()
 	{
 		lUDPClient.startClient();
 	}
-
+	ImPlot::ShowDemoWindow();
 }
 
 void DataClientLayer::ConnectButton() {
