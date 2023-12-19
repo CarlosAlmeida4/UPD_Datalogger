@@ -2,6 +2,7 @@ project "GLFW"
 	kind "StaticLib"
 	language "C"
 	staticruntime "off"
+	warnings "off"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -37,8 +38,10 @@ project "GLFW"
 			"src/x11_monitor.c",
 			"src/x11_window.c",
 			"src/xkb_unicode.c",
+			"src/posix_module.c",
 			"src/posix_time.c",
 			"src/posix_thread.c",
+			"src/posix_module.c",
 			"src/glx_context.c",
 			"src/egl_context.c",
 			"src/osmesa_context.c",
@@ -48,6 +51,28 @@ project "GLFW"
 		defines
 		{
 			"_GLFW_X11"
+		}
+
+	filter "system:macosx"
+		pic "On"
+
+		files
+		{
+			"src/cocoa_init.m",
+			"src/cocoa_monitor.m",
+			"src/cocoa_window.m",
+			"src/cocoa_joystick.m",
+			"src/cocoa_time.c",
+			"src/nsgl_context.m",
+			"src/posix_thread.c",
+			"src/posix_module.c",
+			"src/osmesa_context.c",
+			"src/egl_context.c"
+		}
+
+		defines
+		{
+			"_GLFW_COCOA"
 		}
 
 	filter "system:windows"
@@ -73,20 +98,15 @@ project "GLFW"
 			"_CRT_SECURE_NO_WARNINGS"
 		}
 
-		links
-		{
-			"Dwmapi.lib"
-		}
-
 	filter "configurations:Debug"
 		runtime "Debug"
 		symbols "on"
 
 	filter "configurations:Release"
 		runtime "Release"
-		optimize "on"
+		optimize "speed"
 
-	filter "configurations:Dist"
+    filter "configurations:Dist"
 		runtime "Release"
-		optimize "on"
+		optimize "speed"
         symbols "off"

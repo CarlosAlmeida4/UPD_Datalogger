@@ -15,6 +15,8 @@
 
 #include "UDPClient.h"
 
+#include "ImPlot/implot.h"
+
 UDPClient lUDPClient("127.0.0.1", 20782);
 
 void DataClientLayer::OnAttach()
@@ -32,8 +34,10 @@ void DataClientLayer::OnUIRender()
 {
 	//m_Console.OnUIRender();
 	ImGui::ShowDemoWindow();
+	ImPlot::CreateContext();
+	ImPlot::ShowDemoWindow();
 	//ConnectButton();
-	DriverInputs();
+	DriverInputsStatus();
 	StageStatus();
 	if (!lUDPClient.isRunning_b)
 	{
@@ -50,7 +54,7 @@ void DataClientLayer::ConnectButton() {
 
 }
 
-void DataClientLayer::DriverInputs()
+void DataClientLayer::DriverInputsStatus()
 {
 	ImGui::Begin("Driver Inputs");
 	char buf[32];
@@ -70,6 +74,11 @@ void DataClientLayer::DriverInputs()
 	ImGui::ProgressBar(l_EASportsWRC.data.clutch, ImVec2(0.0f, 0.0f), buf);
 	ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 	ImGui::Text("Clutch");
+	//*******************************Handbrake
+	sprintf(buf, "%d/%d", (int)(l_EASportsWRC.data.handbrake * 100), 100);
+	ImGui::ProgressBar(l_EASportsWRC.data.handbrake, ImVec2(0.0f, 0.0f), buf);
+	ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+	ImGui::Text("Handbrake");
 	//*******************************Steering
 	sprintf(buf, "%d", (int)(l_EASportsWRC.data.stear));
 	ImGui::SliderFloat("Steering", &l_EASportsWRC.data.stear, -1.0f, 1.0f, "%.3f", 1);
@@ -77,6 +86,7 @@ void DataClientLayer::DriverInputs()
 	
 	ImGui::End();
 }
+
 
 void DataClientLayer::StageStatus()
 {
@@ -99,7 +109,10 @@ void DataClientLayer::StageStatus()
 	ImGui::End();
 }
 
+void DataClientLayer::BrakeData()
+{
 
+}
 
 void DataClientLayer::OnDisconnectButton()
 {
