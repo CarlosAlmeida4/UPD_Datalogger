@@ -32,9 +32,13 @@ private:
 	void OnDataReceived(const Walnut::Buffer buffer);
 	void SendChatMessage(std::string_view message);
 	
-	//Output Windows
-	void DriverInputs();
+	//Show the driver current driver inputs
+	void DriverInputsStatus();
+	// show the current stage time and distance
 	void StageStatus();
+	// Show the recent Brake related Data
+	void BrakeData();
+
 
 private:
 	void SaveConnectionDetails(const std::filesystem::path& filepath);
