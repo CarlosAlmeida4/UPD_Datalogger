@@ -8,6 +8,12 @@ constexpr auto to_underlying(E e) noexcept {
 }
 
 
+/***
+
+Array Operations
+
+***/
+
 void EASportsWRC::HandleArray()
 {
 	data.speed = UnpackArray(EAoffset_t::vehicle_speed);
@@ -28,22 +34,7 @@ void EASportsWRC::HandleArray()
 	
 	convertSeconds2Time();
 	//PrintArray();
-}
-
-void EASportsWRC::StartStage()
-{
-	if (!OnStage_b) OnStage_b = true;
-	std::cout << "Start Stage" << std::endl;
-}
-
-bool EASportsWRC::GetOnStage()
-{
-	return OnStage_b;
-}
-
-void EASportsWRC::SetOnStage(bool value)
-{
-	OnStage_b = value;
+	dataVector.push_back(data);
 }
 
 float EASportsWRC::UnpackArray(EAoffset_t offset)
@@ -61,6 +52,39 @@ double EASportsWRC::dUnpackArray(EAoffset_t offset)
 	std::memcpy(&data, UDPReceiveArray.data() + to_underlying(offset), 8);
 	return data;
 }
+
+void EASportsWRC::Vector2Array()
+{
+	std::array<EAtelemetry_data_t, dataVector.size()> dataArray;
+}
+
+/***
+
+Stage Handlers
+
+***/
+
+void EASportsWRC::StartStage()
+{
+	if (!OnStage_b) OnStage_b = true;
+	std::cout << "Start Stage" << std::endl;
+}
+
+bool EASportsWRC::GetOnStage()
+{
+	return OnStage_b;
+}
+
+void EASportsWRC::SetOnStage(bool value)
+{
+	OnStage_b = value;
+}
+
+/***
+
+Utilities
+
+***/
 
 void EASportsWRC::PrintArray()
 {
@@ -83,10 +107,16 @@ void EASportsWRC::PrintArray()
 
 }
 
+/***
+
+Extra calculations
+
+***/
+
 void EASportsWRC::convertSeconds2Time()
 {
 	//float current_time = data.current_time;
-	data.current_seconds = std::fmod(data.current_time,60);
+	data.current_seconds = std::fmod(data.current_time, 60);
 	data.current_minutes = data.current_time / 60;
 	//data.current_seconds = data.current_time % 60;
 }

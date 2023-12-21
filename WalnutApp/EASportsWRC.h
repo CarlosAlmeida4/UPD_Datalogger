@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <vector>
 
 enum class EAoffset_t : uint16_t {
 	FourCC = 0,
@@ -91,7 +92,8 @@ class EASportsWRC
 	public:
 		bool OnStage_b = false;
 		std::array<uint8_t, 265> UDPReceiveArray{};
-		EAtelemetry_data_t data;
+		EAtelemetry_data_t data; //TODO check if deprecated
+		std::vector<EAtelemetry_data_t> dataVector;
 	private:
 
 
@@ -105,6 +107,7 @@ class EASportsWRC
 	private:
 		void PrintArray();
 		void convertSeconds2Time();
+		void Vector2Array();
 
 };
 
