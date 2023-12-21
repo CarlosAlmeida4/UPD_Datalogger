@@ -55,7 +55,7 @@ double EASportsWRC::dUnpackArray(EAoffset_t offset)
 
 void EASportsWRC::Vector2Array()
 {
-	std::array<EAtelemetry_data_t, dataVector.size()> dataArray;
+	///std::array<EAtelemetry_data_t, dataVector.size()> dataArray;
 }
 
 /***
