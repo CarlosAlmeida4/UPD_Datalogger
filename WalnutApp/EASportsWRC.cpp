@@ -31,16 +31,19 @@ void EASportsWRC::HandleArray()
 	data_s.game_total_time = UnpackArray(EAoffset_t::game_total_time);
 	data_s.game_delta_time = UnpackArray(EAoffset_t::game_delta_time);
 	data_s.game_frame_count = UnpackArray(EAoffset_t::game_frame_count);
-	data_s.brake_temp_bl = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_bl);
-	data_s.brake_temp_br = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_br);
-	data_s.brake_temp_fl = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_fl);
-	data_s.brake_temp_fr = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_fr);
+	//data_s.brake_temp_bl = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_bl);
+	//data_s.brake_temp_br = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_br);
+	//data_s.brake_temp_fl = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_fl);
+	//data_s.brake_temp_fr = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_fr);
+	data_s.brake_temp_br = UnpackArray(EAoffset_t::vehicle_brake_temperature_bl);
+	data_s.brake_temp_fl = UnpackArray(EAoffset_t::vehicle_brake_temperature_br);
+	data_s.brake_temp_fr = UnpackArray(EAoffset_t::vehicle_brake_temperature_fl);
+	data_s.brake_temp_bl = UnpackArray(EAoffset_t::vehicle_brake_temperature_fr);
 	
 	data = data_s;
 	convertSeconds2Time();
 	//PrintArray();
 	TelemetryData_v.push_back(data_s);
-	AddtoCircularBuf(data_s);
 }
 
 float EASportsWRC::UnpackArray(EAoffset_t offset)

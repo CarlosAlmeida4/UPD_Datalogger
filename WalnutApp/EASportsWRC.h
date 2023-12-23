@@ -92,7 +92,7 @@ struct EAtelemetry_data_t {
 };
 
 //Configurable circular buffer max size
-static const size_t CircularBufferMaxSize = 300;
+static const size_t CircularBufferMaxSize = 1;
 
 class EASportsWRC
 {
