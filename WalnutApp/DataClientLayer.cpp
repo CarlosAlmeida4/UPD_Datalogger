@@ -144,7 +144,7 @@ void DataClientLayer::BrakeData()
 	BrakePos.Span = history;
 
 	static ImPlotAxisFlags flags = ImPlotAxisFlags_NoTickLabels;
-
+	/*
 	if (ImPlot::BeginPlot(" Brake Data ", ImVec2(-1, 150)))
 	{
 		ImPlot::SetupAxes(NULL, NULL, flags, flags);
@@ -158,6 +158,21 @@ void DataClientLayer::BrakeData()
 		}
 		ImPlot::EndPlot();
 	}
+	*/
+	if (ImPlot::BeginPlot(" Brake Data ", ImVec2(-1, 150)))
+	{
+		ImPlot::SetupAxes(NULL, NULL, flags, flags);
+		ImPlot::SetupAxisLimits(ImAxis_X1, 0, history, ImGuiCond_Always);
+		ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1);
+		ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
+		if (BrakePos.Data.Size != 0)
+		{
+			ImPlot::PlotLine("Brake Pedal", &BrakePos.Data[0].x, &BrakePos.Data[0].y, BrakePos.Data.size(), 0, 0, 2 * sizeof(float));
+			std::cout << "Brake Position: " << BrakePos.Data[0].y << std::endl;
+		}
+		ImPlot::EndPlot();
+	}
+	
 
 	ImGui::End();
 }
