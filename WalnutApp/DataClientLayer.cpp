@@ -17,6 +17,23 @@
 
 #include "ImPlot/implot.h"
 
+
+// utility structure for realtime plot
+struct RollingBuffer {
+	float Span;
+	ImVector<ImVec2> Data;
+	RollingBuffer() {
+		Span = 10.0f;
+		Data.reserve(2000);
+	}
+	void AddPoint(float x, float y) {
+		float xmod = fmodf(x, Span);
+		if (!Data.empty() && xmod < Data.back().x)
+			Data.shrink(0);
+		Data.push_back(ImVec2(xmod, y));
+	}
+};
+
 UDPClient lUDPClient("127.0.0.1", 20782);
 
 void DataClientLayer::OnAttach()
@@ -29,7 +46,6 @@ void DataClientLayer::OnDetach()
 
 }
 
-
 void DataClientLayer::OnUIRender()
 {
 	//m_Console.OnUIRender();
@@ -39,6 +55,7 @@ void DataClientLayer::OnUIRender()
 	//ConnectButton();
 	DriverInputsStatus();
 	StageStatus();
+	BrakeData();
 	if (!lUDPClient.isRunning_b)
 	{
 		lUDPClient.startClient();
@@ -50,8 +67,6 @@ void DataClientLayer::ConnectButton() {
 	ImGui::Begin("Hello");
 	bool ConnectionPressed = ImGui::Button("Button");
 	ImGui::End();
-
-
 }
 
 void DataClientLayer::DriverInputsStatus()
@@ -87,7 +102,6 @@ void DataClientLayer::DriverInputsStatus()
 	ImGui::End();
 }
 
-
 void DataClientLayer::StageStatus()
 {
 	ImGui::Begin("Stage Status");
@@ -111,14 +125,47 @@ void DataClientLayer::StageStatus()
 
 void DataClientLayer::BrakeData()
 {
+	
+	ImGui::Begin("Brake Data");
 
+	static RollingBuffer BrakePos;
+	float current_time = 0;
+
+	if (l_EASportsWRC.TelemetryData_v.size() != 0)
+	{
+		current_time = l_EASportsWRC.TelemetryData_v.back().current_time;
+		float BrakePosition = l_EASportsWRC.TelemetryData_v.back().brake;
+		
+		BrakePos.AddPoint(current_time, BrakePosition);
+	}
+
+	static float history = 10.0f;
+	ImGui::SliderFloat("History", &history, 1, 30, "%.1f s");
+	BrakePos.Span = history;
+
+	static ImPlotAxisFlags flags = ImPlotAxisFlags_NoTickLabels;
+
+	if (ImPlot::BeginPlot(" Brake Data ", ImVec2(-1, 150)))
+	{
+		ImPlot::SetupAxes(NULL, NULL, flags, flags);
+		ImPlot::SetupAxisLimits(ImAxis_X1, current_time - history, current_time, ImGuiCond_Always);
+		ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1);
+		ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
+		if (BrakePos.Data.Size != 0)
+		{
+			ImPlot::PlotLine("Brake Pedal", &BrakePos.Data[0].x, &BrakePos.Data[0].y, BrakePos.Data.size(), 0, 0, 2 * sizeof(float));
+			std::cout << "Brake Position: " << BrakePos.Data[0].y << std::endl;
+		}
+		ImPlot::EndPlot();
+	}
+
+	ImGui::End();
 }
 
 void DataClientLayer::OnDisconnectButton()
 {
 	m_Client->Disconnect();
 }
-
 
 void DataClientLayer::OnConnected()
 {
@@ -130,7 +177,6 @@ void DataClientLayer::OnDisconnected()
 {
 	m_Console.AddItalicMessageWithColor(0xff8a8a8a, "Lost connection to server!");
 }
-
 
 void DataClientLayer::SaveConnectionDetails(const std::filesystem::path& filepath)
 {

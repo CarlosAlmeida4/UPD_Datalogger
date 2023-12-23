@@ -1,12 +1,11 @@
 #include "EASportsWRC.h"
 #include <iostream>
 
-
+/***Utilities***/
 template <typename E>
 constexpr auto to_underlying(E e) noexcept {
 	return static_cast<std::underlying_type_t<E>>(e);
 }
-
 
 /***
 
@@ -16,25 +15,32 @@ Array Operations
 
 void EASportsWRC::HandleArray()
 {
-	data.speed = UnpackArray(EAoffset_t::vehicle_speed);
-	data.gear = UnpackArray(EAoffset_t::vehicle_gear_index);
-	data.stear = UnpackArray(EAoffset_t::vehicle_steering);
-	data.clutch = UnpackArray(EAoffset_t::vehicle_clutch);
-	data.brake = UnpackArray(EAoffset_t::vehicle_brake);
-	data.throttle = UnpackArray(EAoffset_t::vehicle_throttle);
-	data.rpm = UnpackArray(EAoffset_t::vehicle_engine_rpm_current);
-	data.max_rpm = UnpackArray(EAoffset_t::vehicle_engine_rpm_max);
-	data.track_length = dUnpackArray(EAoffset_t::stage_length);
-	data.lap_distance = dUnpackArray(EAoffset_t::stage_current_distance);
-	data.current_time = UnpackArray(EAoffset_t::stage_current_time);
-	data.handbrake = UnpackArray(EAoffset_t::vehicle_handbrake);
-	data.game_total_time = UnpackArray(EAoffset_t::game_total_time);
-	data.game_delta_time = UnpackArray(EAoffset_t::game_delta_time);
-	data.game_frame_count = UnpackArray(EAoffset_t::game_frame_count);
+	EAtelemetry_data_t data_s;
+	data_s.speed = UnpackArray(EAoffset_t::vehicle_speed);
+	data_s.gear = UnpackArray(EAoffset_t::vehicle_gear_index);
+	data_s.stear = UnpackArray(EAoffset_t::vehicle_steering);
+	data_s.clutch = UnpackArray(EAoffset_t::vehicle_clutch);
+	data_s.brake = UnpackArray(EAoffset_t::vehicle_brake);
+	data_s.throttle = UnpackArray(EAoffset_t::vehicle_throttle);
+	data_s.rpm = UnpackArray(EAoffset_t::vehicle_engine_rpm_current);
+	data_s.max_rpm = UnpackArray(EAoffset_t::vehicle_engine_rpm_max);
+	data_s.track_length = dUnpackArray(EAoffset_t::stage_length);
+	data_s.lap_distance = dUnpackArray(EAoffset_t::stage_current_distance);
+	data_s.current_time = UnpackArray(EAoffset_t::stage_current_time);
+	data_s.handbrake = UnpackArray(EAoffset_t::vehicle_handbrake);
+	data_s.game_total_time = UnpackArray(EAoffset_t::game_total_time);
+	data_s.game_delta_time = UnpackArray(EAoffset_t::game_delta_time);
+	data_s.game_frame_count = UnpackArray(EAoffset_t::game_frame_count);
+	data_s.brake_temp_bl = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_bl);
+	data_s.brake_temp_br = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_br);
+	data_s.brake_temp_fl = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_fl);
+	data_s.brake_temp_fr = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_fr);
 	
+	data = data_s;
 	convertSeconds2Time();
 	//PrintArray();
-	dataVector.push_back(data);
+	TelemetryData_v.push_back(data_s);
+	AddtoCircularBuf(data_s);
 }
 
 float EASportsWRC::UnpackArray(EAoffset_t offset)
@@ -53,9 +59,18 @@ double EASportsWRC::dUnpackArray(EAoffset_t offset)
 	return data;
 }
 
-void EASportsWRC::Vector2Array()
+void EASportsWRC::AddtoCircularBuf(EAtelemetry_data_t data_s)
 {
-	///std::array<EAtelemetry_data_t, dataVector.size()> dataArray;
+	if (EAcircularBuff_s.currentIndex >= CircularBufferMaxSize)
+	{
+		EAcircularBuff_s.currentIndex = 0;
+		EAcircularBuff_s.circularBuffer[EAcircularBuff_s.currentIndex] = data_s;
+	}
+	else
+	{
+		EAcircularBuff_s.circularBuffer[EAcircularBuff_s.currentIndex] = data_s;
+		EAcircularBuff_s.currentIndex++;
+	}
 }
 
 /***

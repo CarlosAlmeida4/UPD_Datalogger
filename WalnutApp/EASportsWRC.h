@@ -84,18 +84,29 @@ struct EAtelemetry_data_t {
 	float game_total_time;
 	float game_delta_time;
 	float game_frame_count;
+	float brake_temp_bl;
+	float brake_temp_br;
+	float brake_temp_fl;
+	float brake_temp_fr;
+
 };
 
+//Configurable circular buffer max size
+static const size_t CircularBufferMaxSize = 300;
 
 class EASportsWRC
 {
 	public:
 		bool OnStage_b = false;
 		std::array<uint8_t, 265> UDPReceiveArray{};
-		EAtelemetry_data_t data; //TODO check if deprecated
-		std::vector<EAtelemetry_data_t> dataVector;
+		EAtelemetry_data_t data; //keep, fastest way to get the latest data
+		std::vector<EAtelemetry_data_t> TelemetryData_v;
 	private:
-
+		struct EAcircularBuff_t {
+			uint8_t currentIndex = 0;
+			std::array<EAtelemetry_data_t, CircularBufferMaxSize> circularBuffer;
+		}EAcircularBuff_s;
+		
 
 	public:
 		void StartStage();
@@ -107,7 +118,7 @@ class EASportsWRC
 	private:
 		void PrintArray();
 		void convertSeconds2Time();
-		void Vector2Array();
+		void AddtoCircularBuf(EAtelemetry_data_t data_s);
 
 };
 
