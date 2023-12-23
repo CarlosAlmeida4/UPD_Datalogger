@@ -34,6 +34,32 @@ struct RollingBuffer {
 	}
 };
 
+// utility structure for realtime plot
+struct ScrollingBuffer {
+	int MaxSize;
+	int Offset;
+	ImVector<ImVec2> Data;
+	ScrollingBuffer(int max_size = 2000) {
+		MaxSize = max_size;
+		Offset = 0;
+		Data.reserve(MaxSize);
+	}
+	void AddPoint(float x, float y) {
+		if (Data.size() < MaxSize)
+			Data.push_back(ImVec2(x, y));
+		else {
+			Data[Offset] = ImVec2(x, y);
+			Offset = (Offset + 1) % MaxSize;
+		}
+	}
+	void Erase() {
+		if (Data.size() > 0) {
+			Data.shrink(0);
+			Offset = 0;
+		}
+	}
+};
+
 UDPClient lUDPClient("127.0.0.1", 20782);
 
 void DataClientLayer::OnAttach()
@@ -128,7 +154,7 @@ void DataClientLayer::BrakeData()
 	
 	ImGui::Begin("Brake Data");
 
-	static RollingBuffer BrakePos;
+	static ScrollingBuffer BrakePos;
 	float current_time = 0;
 
 	if (l_EASportsWRC.TelemetryData_v.size() != 0)
@@ -141,10 +167,10 @@ void DataClientLayer::BrakeData()
 
 	static float history = 10.0f;
 	ImGui::SliderFloat("History", &history, 1, 30, "%.1f s");
-	BrakePos.Span = history;
+	//BrakePos.Span = history;
 
 	static ImPlotAxisFlags flags = ImPlotAxisFlags_NoTickLabels;
-	/*
+
 	if (ImPlot::BeginPlot(" Brake Data ", ImVec2(-1, 150)))
 	{
 		ImPlot::SetupAxes(NULL, NULL, flags, flags);
@@ -153,25 +179,13 @@ void DataClientLayer::BrakeData()
 		ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
 		if (BrakePos.Data.Size != 0)
 		{
-			ImPlot::PlotLine("Brake Pedal", &BrakePos.Data[0].x, &BrakePos.Data[0].y, BrakePos.Data.size(), 0, 0, 2 * sizeof(float));
-			std::cout << "Brake Position: " << BrakePos.Data[0].y << std::endl;
+			ImPlot::PlotLine("Brake Pedal", &BrakePos.Data[0].x, &BrakePos.Data[0].y, BrakePos.Data.size(), 0,  BrakePos.Offset, 2 * sizeof(float));
+			//std::cout << "Brake Position: " << BrakePos.Data[0].y << std::endl;
 		}
 		ImPlot::EndPlot();
 	}
-	*/
-	if (ImPlot::BeginPlot(" Brake Data ", ImVec2(-1, 150)))
-	{
-		ImPlot::SetupAxes(NULL, NULL, flags, flags);
-		ImPlot::SetupAxisLimits(ImAxis_X1, 0, history, ImGuiCond_Always);
-		ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1);
-		ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
-		if (BrakePos.Data.Size != 0)
-		{
-			ImPlot::PlotLine("Brake Pedal", &BrakePos.Data[0].x, &BrakePos.Data[0].y, BrakePos.Data.size(), 0, 0, 2 * sizeof(float));
-			std::cout << "Brake Position: " << BrakePos.Data[0].y << std::endl;
-		}
-		ImPlot::EndPlot();
-	}
+
+
 	
 
 	ImGui::End();
