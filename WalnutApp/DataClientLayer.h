@@ -18,19 +18,8 @@ public:
 	virtual void OnDetach() override;
 	virtual void OnUIRender() override;
 
-	bool IsConnected() const;
-	void OnDisconnectButton();
-private:
-	// UI
-	void UI_ConnectionModal();
-	void UI_ClientList();
-	void ConnectButton();
 
-	// Server event callbacks
-	void OnConnected();
-	void OnDisconnected();
-	void OnDataReceived(const Walnut::Buffer buffer);
-	void SendChatMessage(std::string_view message);
+private:
 	
 	//Show the driver current driver inputs
 	void DriverInputsStatus();
@@ -40,9 +29,6 @@ private:
 	void BrakeData();
 
 
-private:
-	void SaveConnectionDetails(const std::filesystem::path& filepath);
-	bool LoadConnectionDetails(const std::filesystem::path& filepath);
 private:
 	std::unique_ptr<Walnut::Client> m_Client;
 	Walnut::UI::Console m_Console{ "Chat" };

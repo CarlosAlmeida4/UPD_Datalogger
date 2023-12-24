@@ -75,11 +75,6 @@ void DataClientLayer::OnUIRender()
 
 }
 
-void DataClientLayer::ConnectButton() {
-	ImGui::Begin("Hello");
-	bool ConnectionPressed = ImGui::Button("Button");
-	ImGui::End();
-}
 
 void DataClientLayer::DriverInputsStatus()
 {
@@ -240,72 +235,3 @@ void DataClientLayer::BrakeData()
 	ImGui::End();
 }
 
-void DataClientLayer::OnDisconnectButton()
-{
-	m_Client->Disconnect();
-}
-
-void DataClientLayer::OnConnected()
-{
-	m_Console.ClearLog();
-	// Welcome message sent in PacketType::ClientConnectionRequest response handling
-}
-
-void DataClientLayer::OnDisconnected()
-{
-	m_Console.AddItalicMessageWithColor(0xff8a8a8a, "Lost connection to server!");
-}
-
-void DataClientLayer::SaveConnectionDetails(const std::filesystem::path& filepath)
-{
-	YAML::Emitter out;
-	{
-		out << YAML::BeginMap; // Root
-		out << YAML::Key << "ConnectionDetails" << YAML::Value;
-
-		out << YAML::BeginMap;
-		out << YAML::Key << "Username" << YAML::Value << m_Username;
-		out << YAML::Key << "Color" << YAML::Value << m_Color;
-		out << YAML::Key << "ServerIP" << YAML::Value << m_ServerIP;
-		out << YAML::EndMap;
-
-		out << YAML::EndMap; // Root
-	}
-
-	std::ofstream fout(filepath);
-	fout << out.c_str();
-}
-
-bool DataClientLayer::LoadConnectionDetails(const std::filesystem::path& filepath)
-{
-	if (!std::filesystem::exists(filepath))
-		return false;
-
-	YAML::Node data;
-	try
-	{
-		data = YAML::LoadFile(filepath.string());
-	}
-	catch (YAML::ParserException e)
-	{
-		std::cout << "[ERROR] Failed to load message history " << filepath << std::endl << e.what() << std::endl;
-		return false;
-	}
-
-	auto rootNode = data["ConnectionDetails"];
-	if (!rootNode)
-		return false;
-
-	m_Username = rootNode["Username"].as<std::string>();
-
-	m_Color = rootNode["Color"].as<uint32_t>();
-	ImVec4 color = ImColor(m_Color).Value;
-	m_ColorBuffer[0] = color.x;
-	m_ColorBuffer[1] = color.y;
-	m_ColorBuffer[2] = color.z;
-	m_ColorBuffer[3] = color.w;
-
-	m_ServerIP = rootNode["ServerIP"].as<std::string>();
-
-	return true;
-}
