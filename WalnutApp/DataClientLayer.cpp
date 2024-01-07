@@ -17,6 +17,9 @@
 
 #include "ImPlot/implot.h"
 
+// required by MDF
+#include <filesystem>
+
 
 
 
@@ -127,6 +130,12 @@ void DataClientLayer::StageStatus()
 	float displayMicroSeconds = (l_EASportsWRC.data.current_seconds - (int)l_EASportsWRC.data.current_seconds)*1000;
 	ImGui::Text("Current Time: %d : %d : %1.0f", displayCurrentMinutes, displayCurrentSeconds , displayMicroSeconds);
 
+
+	if (ImGui::Button("Store Run"))
+	{
+		l_EASportsWRC.StoreVector();
+	}
+
 	ImGui::End();
 }
 
@@ -142,16 +151,16 @@ void DataClientLayer::BrakeData()
 	/*																							*/
 	/********************************************************************************************/
 
-	if (l_EASportsWRC.TelemetryData_v.size() != 0)
+	if (l_EASportsWRC.TelemetryData_v.brake_temp_bl.size() != 0)
 	{
-		current_time = l_EASportsWRC.TelemetryData_v.back().current_time;
-		float BrakePosition = l_EASportsWRC.TelemetryData_v.back().brake;
+		current_time = l_EASportsWRC.TelemetryData_v.current_time.back();
+		float BrakePosition = l_EASportsWRC.TelemetryData_v.brake.back();
 		
 		BrakePos.AddPoint(current_time, BrakePosition);
-		BrakeTempbl.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.back().brake_temp_bl);
-		BrakeTempbr.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.back().brake_temp_br);
-		BrakeTempfl.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.back().brake_temp_fl);
-		BrakeTempfr.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.back().brake_temp_fr);
+		BrakeTempbl.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.brake_temp_bl.back());
+		BrakeTempbr.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.brake_temp_br.back());
+		BrakeTempfl.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.brake_temp_fl.back());
+		BrakeTempfr.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.brake_temp_fr.back());
 	}
 
 	static float history = 10.0f;
@@ -205,10 +214,10 @@ void DataClientLayer::BrakeData()
 
 	if (BrakeTempbl.Data.Size != 0)// only need to check size of one
 	{
-		values[0][0] = l_EASportsWRC.TelemetryData_v.back().brake_temp_bl;
-		values[0][1] = l_EASportsWRC.TelemetryData_v.back().brake_temp_br;
-		values[1][0] = l_EASportsWRC.TelemetryData_v.back().brake_temp_fl;
-		values[1][1] = l_EASportsWRC.TelemetryData_v.back().brake_temp_fr;
+		values[0][0] = l_EASportsWRC.TelemetryData_v.brake_temp_bl.back();
+		values[0][1] = l_EASportsWRC.TelemetryData_v.brake_temp_br.back();
+		values[1][0] = l_EASportsWRC.TelemetryData_v.brake_temp_fl.back();
+		values[1][1] = l_EASportsWRC.TelemetryData_v.brake_temp_fr.back();
 	}
 	
 	static float scale_min = 0;

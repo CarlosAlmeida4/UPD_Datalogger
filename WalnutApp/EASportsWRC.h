@@ -1,6 +1,8 @@
 #pragma once
 #include <array>
 #include <vector>
+#include <yaml-cpp/yaml.h>
+#include <fstream>
 
 enum class EAoffset_t : uint16_t {
 	FourCC = 0,
@@ -91,6 +93,32 @@ struct EAtelemetry_data_t {
 
 };
 
+struct EAtelemetry_data_Vector_t {
+	std::vector<float>speed;
+	std::vector<float>gear;
+	std::vector<float>stear;
+	std::vector<float>clutch;
+	std::vector<float>brake;
+	std::vector<float>throttle;
+	std::vector<float>rpm;
+	std::vector<float>max_rpm;
+	std::vector<double> track_length;
+	std::vector<double> lap_distance;
+	std::vector<float>handbrake;
+	std::vector<float>current_time;
+	std::vector<float>current_minutes;
+	std::vector<float>current_seconds;
+	std::vector<float>game_total_time;
+	std::vector<float>game_delta_time;
+	std::vector<float>game_frame_count;
+	std::vector<float>brake_temp_bl;
+	std::vector<float>brake_temp_br;
+	std::vector<float>brake_temp_fl;
+	std::vector<float>brake_temp_fr;
+
+};
+
+
 //Configurable circular buffer max size
 static const size_t CircularBufferMaxSize = 1;
 
@@ -100,7 +128,8 @@ class EASportsWRC
 		bool OnStage_b = false;
 		std::array<uint8_t, 265> UDPReceiveArray{};
 		EAtelemetry_data_t data; //keep, fastest way to get the latest data
-		std::vector<EAtelemetry_data_t> TelemetryData_v;
+		//std::vector<EAtelemetry_data_t> TelemetryData_v;
+		EAtelemetry_data_Vector_t TelemetryData_v;
 	private:
 		struct EAcircularBuff_t {
 			uint8_t currentIndex = 0;
@@ -115,6 +144,7 @@ class EASportsWRC
 		float UnpackArray(EAoffset_t offset);
 		double dUnpackArray(EAoffset_t offset);
 		void HandleArray();
+		void StoreVector();
 	private:
 		void PrintArray();
 		void convertSeconds2Time();
