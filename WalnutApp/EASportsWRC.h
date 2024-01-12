@@ -4,6 +4,13 @@
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 
+/* * * * * Type Definitions * * * * */
+
+typedef std::vector <float> EAtelemetryfloat_t;
+typedef std::vector <double> EAtelemetrydouble_t;
+typedef std::map<std::string, EAtelemetryfloat_t> EAtelemetryfloatMap_t;
+typedef std::map<std::string, EAtelemetrydouble_t> EAtelemetrydoubleMap_t;
+
 enum class EAoffset_t : uint16_t {
 	FourCC = 0,
 	packet_uid = 4,
@@ -94,27 +101,27 @@ struct EAtelemetry_data_t {
 };
 
 struct EAtelemetry_data_Vector_t {
-	std::vector<float>speed;
-	std::vector<float>gear;
-	std::vector<float>stear;
-	std::vector<float>clutch;
-	std::vector<float>brake;
-	std::vector<float>throttle;
-	std::vector<float>rpm;
-	std::vector<float>max_rpm;
-	std::vector<double> track_length;
-	std::vector<double> lap_distance;
-	std::vector<float>handbrake;
-	std::vector<float>current_time;
-	std::vector<float>current_minutes;
-	std::vector<float>current_seconds;
-	std::vector<float>game_total_time;
-	std::vector<float>game_delta_time;
-	std::vector<float>game_frame_count;
-	std::vector<float>brake_temp_bl;
-	std::vector<float>brake_temp_br;
-	std::vector<float>brake_temp_fl;
-	std::vector<float>brake_temp_fr;
+	EAtelemetryfloat_t speed;
+	EAtelemetryfloat_t gear;
+	EAtelemetryfloat_t stear;
+	EAtelemetryfloat_t clutch;
+	EAtelemetryfloat_t brake;
+	EAtelemetryfloat_t throttle;
+	EAtelemetryfloat_t rpm;
+	EAtelemetryfloat_t max_rpm;
+	EAtelemetrydouble_t track_length;
+	EAtelemetrydouble_t lap_distance;
+	EAtelemetryfloat_t current_time;
+	EAtelemetryfloat_t handbrake;
+	EAtelemetryfloat_t current_minutes;
+	EAtelemetryfloat_t current_seconds;
+	EAtelemetryfloat_t game_total_time;
+	EAtelemetryfloat_t game_delta_time;
+	EAtelemetryfloat_t game_frame_count;
+	EAtelemetryfloat_t brake_temp_bl;
+	EAtelemetryfloat_t brake_temp_br;
+	EAtelemetryfloat_t brake_temp_fl;
+	EAtelemetryfloat_t brake_temp_fr;
 
 };
 

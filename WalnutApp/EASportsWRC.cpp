@@ -1,6 +1,9 @@
 #include "EASportsWRC.h"
 #include <iostream>
 
+
+
+
 /***Utilities***/
 template <typename E>
 constexpr auto to_underlying(E e) noexcept {
@@ -36,30 +39,6 @@ void EASportsWRC::HandleArray()
 	data_s.brake_temp_fr = UnpackArray(EAoffset_t::vehicle_brake_temperature_fl);
 	data_s.brake_temp_bl = UnpackArray(EAoffset_t::vehicle_brake_temperature_fr);
 	
-	//data_s.brake_temp_bl = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_bl);
-	//data_s.brake_temp_br = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_br);
-	//data_s.brake_temp_fl = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_fl);
-	//data_s.brake_temp_fr = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_fr);
-	//speed
-	//gear 
-	//stear
-	//clutch
-	//brake
-	//throttle
-	//rpm
-	//max_rpm
-	//track_length
-	//lap_distance
-	//current_time
-	//handbrake
-	//game_total_time
-	//game_delta_time
-	//game_frame_count
-	//brake_temp_br
-	//brake_temp_fl
-	//brake_temp_fr
-	//brake_temp_bl
-
 	data = data_s;
 	convertSeconds2Time();
 	//PrintArray();
@@ -90,53 +69,50 @@ void EASportsWRC::HandleArray()
 
 void EASportsWRC::StoreVector()
 {
-	std::vector <int> squares = { 1, 4, 9, 16 };
 	YAML::Emitter out;
 
-	out << YAML::BeginSeq;
-	out << "Speed";
-	out << YAML::Flow << TelemetryData_v.speed;
-	out << "Gear";
-	out << YAML::Flow << TelemetryData_v.gear;
-	out << "Stear";
-	out << YAML::Flow << TelemetryData_v.stear;
-	out << "Clutch";
-	out << YAML::Flow << TelemetryData_v.clutch;
-	out << "Brake";
-	out << YAML::Flow << TelemetryData_v.brake;
-	out << "Throttle";
-	out << YAML::Flow << TelemetryData_v.throttle;
-	out << "RPM";
-	out << YAML::Flow << TelemetryData_v.rpm;
-	out << "MaxRPM";
-	out << YAML::Flow << TelemetryData_v.max_rpm;
-	out << "Track_Length";
-	out << YAML::Flow << TelemetryData_v.track_length;
-	out << "Lap_Distance";
-	out << YAML::Flow << TelemetryData_v.lap_distance;
-	out << "Handbrake";
-	out << YAML::Flow << TelemetryData_v.handbrake;
-	out << "Current_Time";
-	out << YAML::Flow << TelemetryData_v.current_time;
-	out << "Current_Minutes";
-	out << YAML::Flow << TelemetryData_v.current_minutes;
-	out << "Current_Seconds";
-	out << YAML::Flow << TelemetryData_v.current_seconds;
-	out << "Game_Total_Time";
-	out << YAML::Flow << TelemetryData_v.game_total_time;
-	out << "Game_Delta_Time";
-	out << YAML::Flow << TelemetryData_v.game_delta_time;
-	out << "Game_Frame_Count";
-	out << YAML::Flow << TelemetryData_v.game_frame_count;
-	out << "BrakeTemp_BR";
-	out << YAML::Flow << TelemetryData_v.brake_temp_br;
-	out << "BrakeTemp_FL";
-	out << YAML::Flow << TelemetryData_v.brake_temp_fl;
-	out << "BrakeTemp_FR";
-	out << YAML::Flow << TelemetryData_v.brake_temp_fr;
-	out << "BrakeTemp_BL";
-	out << YAML::Flow << TelemetryData_v.brake_temp_bl;
-	out << YAML::EndSeq;
+	EAtelemetryfloatMap_t EAtelemetryfloatMap;
+	EAtelemetrydoubleMap_t EAtelemetrydoubleMap;
+
+	EAtelemetryfloatMap["Speed"]			= TelemetryData_v.speed						;
+	EAtelemetryfloatMap["Gear"]				= TelemetryData_v.gear						;
+	EAtelemetryfloatMap["Stear"]			= TelemetryData_v.stear						;
+	EAtelemetryfloatMap["Clutch"]			= TelemetryData_v.clutch					;
+	EAtelemetryfloatMap["Brake"]			= TelemetryData_v.brake						;
+	EAtelemetryfloatMap["Throttle"]			= TelemetryData_v.throttle					;
+	EAtelemetryfloatMap["RPM"]				= TelemetryData_v.rpm						;
+	EAtelemetryfloatMap["Max RPM"]			= TelemetryData_v.max_rpm					;
+	EAtelemetrydoubleMap["Track Length"]	= TelemetryData_v.track_length				;
+	EAtelemetrydoubleMap["Lap distance"]	= TelemetryData_v.lap_distance				;
+	EAtelemetryfloatMap["Handbrake"]		= TelemetryData_v.handbrake					;
+	EAtelemetryfloatMap["Current time"]		= TelemetryData_v.current_time				;
+	EAtelemetryfloatMap["Current minutes"]	= TelemetryData_v.current_minutes			;
+	EAtelemetryfloatMap["Current seconds"]	= TelemetryData_v.current_seconds			;
+	EAtelemetryfloatMap["Game total time"]	= TelemetryData_v.game_total_time			;
+	EAtelemetryfloatMap["Game delta time"]	= TelemetryData_v.game_delta_time			;
+	EAtelemetryfloatMap["Game frame count"]	= TelemetryData_v.game_frame_count			;
+	EAtelemetryfloatMap["Brake Temp BR"]	= TelemetryData_v.brake_temp_br				;
+	EAtelemetryfloatMap["Brake Temp FL"]	= TelemetryData_v.brake_temp_fl				;
+	EAtelemetryfloatMap["Brake Temp FR"]	= TelemetryData_v.brake_temp_fr				;
+	EAtelemetryfloatMap["Brake Temp BL"]	= TelemetryData_v.brake_temp_bl				;
+
+	out << YAML::BeginMap;
+	//print all floats
+	EAtelemetryfloatMap_t::iterator itrf;
+	for (itrf = EAtelemetryfloatMap.begin(); itrf != EAtelemetryfloatMap.end(); itrf++)
+	{
+		out << YAML::Key << itrf->first;
+		out << YAML::Flow << itrf->second;
+	}
+	
+	//print all doubles
+	EAtelemetrydoubleMap_t::iterator itrd;
+	for (itrd = EAtelemetrydoubleMap.begin(); itrd != EAtelemetrydoubleMap.end(); itrd++)
+	{
+		out << YAML::Key << itrd->first;
+		out << YAML::Flow << itrd->second;
+	}
+	out << YAML::EndMap;
 
 	std::ofstream fout("test.yaml");
 	fout << out.c_str();
