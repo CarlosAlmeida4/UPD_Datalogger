@@ -214,14 +214,14 @@ void DataClientLayer::BrakeData()
 
 	if (BrakeTempbl.Data.Size != 0)// only need to check size of one
 	{
-		values[0][0] = l_EASportsWRC.TelemetryData_v.brake_temp_bl.back();
-		values[0][1] = l_EASportsWRC.TelemetryData_v.brake_temp_br.back();
-		values[1][0] = l_EASportsWRC.TelemetryData_v.brake_temp_fl.back();
-		values[1][1] = l_EASportsWRC.TelemetryData_v.brake_temp_fr.back();
+		values[0][0] = l_EASportsWRC.TelemetryData_v.brake_temp_fl.back();
+		values[0][1] = l_EASportsWRC.TelemetryData_v.brake_temp_fr.back();
+		values[1][0] = l_EASportsWRC.TelemetryData_v.brake_temp_bl.back();
+		values[1][1] = l_EASportsWRC.TelemetryData_v.brake_temp_br.back();
 	}
 	
 	static float scale_min = 0;
-	static float scale_max = 600;
+	static float scale_max = 400;
 
 	static ImPlotColormap map = ImPlotColormap_Jet;
 	static ImPlotHeatmapFlags hm_flags = 0;
