@@ -8,8 +8,10 @@
 
 typedef std::vector <float> EAtelemetryfloat_t;
 typedef std::vector <double> EAtelemetrydouble_t;
+typedef std::vector <int> EAtelemetrybyte_t;
 typedef std::map<std::string, EAtelemetryfloat_t> EAtelemetryfloatMap_t;
 typedef std::map<std::string, EAtelemetrydouble_t> EAtelemetrydoubleMap_t;
+typedef std::map<std::string, EAtelemetrybyte_t> EAtelemetrybyteMap_t;
 
 enum class EAoffset_t : uint16_t {
 	FourCC = 0,
@@ -76,16 +78,16 @@ enum class EAoffset_t : uint16_t {
 };
 
 struct EAtelemetry_data_t {
-	float speed;
-	float gear;
+	
+	int gear;
+	
+	float VehSpeed;
 	float stear;
 	float clutch;
 	float brake;
 	float throttle;
 	float rpm;
 	float max_rpm;
-	double track_length;
-	double lap_distance;
 	float handbrake;
 	float current_time;
 	float current_minutes;
@@ -98,19 +100,20 @@ struct EAtelemetry_data_t {
 	float brake_temp_fl;
 	float brake_temp_fr;
 
+	double track_length;
+	double lap_distance;
 };
 
 struct EAtelemetry_data_Vector_t {
-	EAtelemetryfloat_t speed;
-	EAtelemetryfloat_t gear;
+	EAtelemetrybyte_t gear;
+	
+	EAtelemetryfloat_t VehSpeed;
 	EAtelemetryfloat_t stear;
 	EAtelemetryfloat_t clutch;
 	EAtelemetryfloat_t brake;
 	EAtelemetryfloat_t throttle;
 	EAtelemetryfloat_t rpm;
 	EAtelemetryfloat_t max_rpm;
-	EAtelemetrydouble_t track_length;
-	EAtelemetrydouble_t lap_distance;
 	EAtelemetryfloat_t current_time;
 	EAtelemetryfloat_t handbrake;
 	EAtelemetryfloat_t current_minutes;
@@ -123,6 +126,8 @@ struct EAtelemetry_data_Vector_t {
 	EAtelemetryfloat_t brake_temp_fl;
 	EAtelemetryfloat_t brake_temp_fr;
 
+	EAtelemetrydouble_t track_length;
+	EAtelemetrydouble_t lap_distance;
 };
 
 
@@ -150,6 +155,7 @@ class EASportsWRC
 		void SetOnStage(bool value);
 		float UnpackArray(EAoffset_t offset);
 		double dUnpackArray(EAoffset_t offset);
+		uint8_t bUnpackArray(EAoffset_t offset);
 		void HandleArray();
 		void StoreVector();
 	private:
