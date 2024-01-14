@@ -17,6 +17,9 @@
 
 #include "ImPlot/implot.h"
 
+// required by MDF
+#include <filesystem>
+
 
 
 
@@ -75,11 +78,6 @@ void DataClientLayer::OnUIRender()
 
 }
 
-void DataClientLayer::ConnectButton() {
-	ImGui::Begin("Hello");
-	bool ConnectionPressed = ImGui::Button("Button");
-	ImGui::End();
-}
 
 void DataClientLayer::DriverInputsStatus()
 {
@@ -132,6 +130,12 @@ void DataClientLayer::StageStatus()
 	float displayMicroSeconds = (l_EASportsWRC.data.current_seconds - (int)l_EASportsWRC.data.current_seconds)*1000;
 	ImGui::Text("Current Time: %d : %d : %1.0f", displayCurrentMinutes, displayCurrentSeconds , displayMicroSeconds);
 
+
+	if (ImGui::Button("Store Run"))
+	{
+		l_EASportsWRC.StoreVector();
+	}
+
 	ImGui::End();
 }
 
@@ -147,16 +151,16 @@ void DataClientLayer::BrakeData()
 	/*																							*/
 	/********************************************************************************************/
 
-	if (l_EASportsWRC.TelemetryData_v.size() != 0)
+	if (l_EASportsWRC.TelemetryData_v.brake_temp_bl.size() != 0)
 	{
-		current_time = l_EASportsWRC.TelemetryData_v.back().current_time;
-		float BrakePosition = l_EASportsWRC.TelemetryData_v.back().brake;
+		current_time = l_EASportsWRC.TelemetryData_v.current_time.back();
+		float BrakePosition = l_EASportsWRC.TelemetryData_v.brake.back();
 		
 		BrakePos.AddPoint(current_time, BrakePosition);
-		BrakeTempbl.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.back().brake_temp_bl);
-		BrakeTempbr.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.back().brake_temp_br);
-		BrakeTempfl.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.back().brake_temp_fl);
-		BrakeTempfr.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.back().brake_temp_fr);
+		BrakeTempbl.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.brake_temp_bl.back());
+		BrakeTempbr.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.brake_temp_br.back());
+		BrakeTempfl.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.brake_temp_fl.back());
+		BrakeTempfr.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.brake_temp_fr.back());
 	}
 
 	static float history = 10.0f;
@@ -210,14 +214,14 @@ void DataClientLayer::BrakeData()
 
 	if (BrakeTempbl.Data.Size != 0)// only need to check size of one
 	{
-		values[0][0] = l_EASportsWRC.TelemetryData_v.back().brake_temp_bl;
-		values[0][1] = l_EASportsWRC.TelemetryData_v.back().brake_temp_br;
-		values[1][0] = l_EASportsWRC.TelemetryData_v.back().brake_temp_fl;
-		values[1][1] = l_EASportsWRC.TelemetryData_v.back().brake_temp_fr;
+		values[0][0] = l_EASportsWRC.TelemetryData_v.brake_temp_fl.back();
+		values[0][1] = l_EASportsWRC.TelemetryData_v.brake_temp_fr.back();
+		values[1][0] = l_EASportsWRC.TelemetryData_v.brake_temp_bl.back();
+		values[1][1] = l_EASportsWRC.TelemetryData_v.brake_temp_br.back();
 	}
 	
 	static float scale_min = 0;
-	static float scale_max = 600;
+	static float scale_max = 400;
 
 	static ImPlotColormap map = ImPlotColormap_Jet;
 	static ImPlotHeatmapFlags hm_flags = 0;
@@ -240,72 +244,3 @@ void DataClientLayer::BrakeData()
 	ImGui::End();
 }
 
-void DataClientLayer::OnDisconnectButton()
-{
-	m_Client->Disconnect();
-}
-
-void DataClientLayer::OnConnected()
-{
-	m_Console.ClearLog();
-	// Welcome message sent in PacketType::ClientConnectionRequest response handling
-}
-
-void DataClientLayer::OnDisconnected()
-{
-	m_Console.AddItalicMessageWithColor(0xff8a8a8a, "Lost connection to server!");
-}
-
-void DataClientLayer::SaveConnectionDetails(const std::filesystem::path& filepath)
-{
-	YAML::Emitter out;
-	{
-		out << YAML::BeginMap; // Root
-		out << YAML::Key << "ConnectionDetails" << YAML::Value;
-
-		out << YAML::BeginMap;
-		out << YAML::Key << "Username" << YAML::Value << m_Username;
-		out << YAML::Key << "Color" << YAML::Value << m_Color;
-		out << YAML::Key << "ServerIP" << YAML::Value << m_ServerIP;
-		out << YAML::EndMap;
-
-		out << YAML::EndMap; // Root
-	}
-
-	std::ofstream fout(filepath);
-	fout << out.c_str();
-}
-
-bool DataClientLayer::LoadConnectionDetails(const std::filesystem::path& filepath)
-{
-	if (!std::filesystem::exists(filepath))
-		return false;
-
-	YAML::Node data;
-	try
-	{
-		data = YAML::LoadFile(filepath.string());
-	}
-	catch (YAML::ParserException e)
-	{
-		std::cout << "[ERROR] Failed to load message history " << filepath << std::endl << e.what() << std::endl;
-		return false;
-	}
-
-	auto rootNode = data["ConnectionDetails"];
-	if (!rootNode)
-		return false;
-
-	m_Username = rootNode["Username"].as<std::string>();
-
-	m_Color = rootNode["Color"].as<uint32_t>();
-	ImVec4 color = ImColor(m_Color).Value;
-	m_ColorBuffer[0] = color.x;
-	m_ColorBuffer[1] = color.y;
-	m_ColorBuffer[2] = color.z;
-	m_ColorBuffer[3] = color.w;
-
-	m_ServerIP = rootNode["ServerIP"].as<std::string>();
-
-	return true;
-}

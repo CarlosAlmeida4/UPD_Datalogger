@@ -1,6 +1,17 @@
 #pragma once
 #include <array>
 #include <vector>
+#include <yaml-cpp/yaml.h>
+#include <fstream>
+
+/* * * * * Type Definitions * * * * */
+
+typedef std::vector <float> EAtelemetryfloat_t;
+typedef std::vector <double> EAtelemetrydouble_t;
+typedef std::vector <int> EAtelemetrybyte_t;
+typedef std::map<std::string, EAtelemetryfloat_t> EAtelemetryfloatMap_t;
+typedef std::map<std::string, EAtelemetrydouble_t> EAtelemetrydoubleMap_t;
+typedef std::map<std::string, EAtelemetrybyte_t> EAtelemetrybyteMap_t;
 
 enum class EAoffset_t : uint16_t {
 	FourCC = 0,
@@ -67,16 +78,48 @@ enum class EAoffset_t : uint16_t {
 };
 
 struct EAtelemetry_data_t {
-	float speed;
-	float gear;
+	
+	int gear;
+	
+	float VehSpeed;
+	float VehTransSpeed;
+	float VehPosX;
+	float VehPosY;
+	float VehPosZ;
+	float VehSpdX;
+	float VehSpdY;
+	float VehSpdZ;
+	float VehAccelX;
+	float VehAccelY;
+	float VehAccelZ;
+	float VehLeftDirX;
+	float VehLeftDirY;
+	float VehLeftDirZ;
+	float VehFwrdDirX;
+	float VehFwrdDirY;
+	float VehFwrdDirZ;
+	float VehUpDirX;
+	float VehUpDirY;
+	float VehUpDirZ;
+	float HubVertPosBL;
+	float HubVertPosBR;
+	float HubVertPosFL;
+	float HubVertPosFR;
+	float HubVertSpdBL;
+	float HubVertSpdBR;
+	float HubVertSpdFL;
+	float HubVertSpdFR;
+	float WheelSpeedBL;
+	float WheelSpeedBR;
+	float WheelSpeedFL;
+	float WheelSpeedFR;
 	float stear;
 	float clutch;
 	float brake;
 	float throttle;
 	float rpm;
+	float rpm_idle;
 	float max_rpm;
-	double track_length;
-	double lap_distance;
 	float handbrake;
 	float current_time;
 	float current_minutes;
@@ -89,7 +132,67 @@ struct EAtelemetry_data_t {
 	float brake_temp_fl;
 	float brake_temp_fr;
 
+	double track_length;
+	double lap_distance;
 };
+
+struct EAtelemetry_data_Vector_t {
+	EAtelemetrybyte_t gear;
+	
+	EAtelemetryfloat_t VehSpeed;
+	EAtelemetryfloat_t VehTransSpeed;
+	EAtelemetryfloat_t VehPosX;
+	EAtelemetryfloat_t VehPosY;
+	EAtelemetryfloat_t VehPosZ;
+	EAtelemetryfloat_t VehSpdX;
+	EAtelemetryfloat_t VehSpdY;
+	EAtelemetryfloat_t VehSpdZ;
+	EAtelemetryfloat_t VehAccelX;
+	EAtelemetryfloat_t VehAccelY;
+	EAtelemetryfloat_t VehAccelZ;
+	EAtelemetryfloat_t VehLeftDirX;
+	EAtelemetryfloat_t VehLeftDirY;
+	EAtelemetryfloat_t VehLeftDirZ;
+	EAtelemetryfloat_t VehFwrdDirX;
+	EAtelemetryfloat_t VehFwrdDirY;
+	EAtelemetryfloat_t VehFwrdDirZ;
+	EAtelemetryfloat_t VehUpDirX;
+	EAtelemetryfloat_t VehUpDirY;
+	EAtelemetryfloat_t VehUpDirZ;
+	EAtelemetryfloat_t HubVertPosBL;
+	EAtelemetryfloat_t HubVertPosBR;
+	EAtelemetryfloat_t HubVertPosFL;
+	EAtelemetryfloat_t HubVertPosFR;
+	EAtelemetryfloat_t HubVertSpdBL;
+	EAtelemetryfloat_t HubVertSpdBR;
+	EAtelemetryfloat_t HubVertSpdFL;
+	EAtelemetryfloat_t HubVertSpdFR;
+	EAtelemetryfloat_t WheelSpeedBL;
+	EAtelemetryfloat_t WheelSpeedBR;
+	EAtelemetryfloat_t WheelSpeedFL;
+	EAtelemetryfloat_t WheelSpeedFR;
+	EAtelemetryfloat_t stear;
+	EAtelemetryfloat_t clutch;
+	EAtelemetryfloat_t brake;
+	EAtelemetryfloat_t throttle;
+	EAtelemetryfloat_t rpm;
+	EAtelemetryfloat_t max_rpm;
+	EAtelemetryfloat_t current_time;
+	EAtelemetryfloat_t handbrake;
+	EAtelemetryfloat_t current_minutes;
+	EAtelemetryfloat_t current_seconds;
+	EAtelemetryfloat_t game_total_time;
+	EAtelemetryfloat_t game_delta_time;
+	EAtelemetryfloat_t game_frame_count;
+	EAtelemetryfloat_t brake_temp_bl;
+	EAtelemetryfloat_t brake_temp_br;
+	EAtelemetryfloat_t brake_temp_fl;
+	EAtelemetryfloat_t brake_temp_fr;
+
+	EAtelemetrydouble_t track_length;
+	EAtelemetrydouble_t lap_distance;
+};
+
 
 //Configurable circular buffer max size
 static const size_t CircularBufferMaxSize = 1;
@@ -100,7 +203,8 @@ class EASportsWRC
 		bool OnStage_b = false;
 		std::array<uint8_t, 265> UDPReceiveArray{};
 		EAtelemetry_data_t data; //keep, fastest way to get the latest data
-		std::vector<EAtelemetry_data_t> TelemetryData_v;
+		//std::vector<EAtelemetry_data_t> TelemetryData_v;
+		EAtelemetry_data_Vector_t TelemetryData_v;
 	private:
 		struct EAcircularBuff_t {
 			uint8_t currentIndex = 0;
@@ -114,7 +218,9 @@ class EASportsWRC
 		void SetOnStage(bool value);
 		float UnpackArray(EAoffset_t offset);
 		double dUnpackArray(EAoffset_t offset);
+		uint8_t bUnpackArray(EAoffset_t offset);
 		void HandleArray();
+		void StoreVector();
 	private:
 		void PrintArray();
 		void convertSeconds2Time();
