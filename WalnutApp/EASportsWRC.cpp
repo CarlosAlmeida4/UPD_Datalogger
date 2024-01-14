@@ -49,7 +49,7 @@ void EASportsWRC::HandleArray()
 	data_s.HubVertSpdBR = UnpackArray(EAoffset_t::vehicle_hub_velocity_br);
 	data_s.HubVertSpdFL = UnpackArray(EAoffset_t::vehicle_hub_velocity_fl);
 	data_s.HubVertSpdFR = UnpackArray(EAoffset_t::vehicle_hub_velocity_fr);
-	data_s.WheelSpeedBL = UnpackArray(EAoffset_t::vehicle_hub_velocity_bl);
+	data_s.WheelSpeedBL = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_bl);
 	data_s.WheelSpeedBR = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_br);
 	data_s.WheelSpeedFL = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_fl);
 	data_s.WheelSpeedFR = UnpackArray(EAoffset_t::vehicle_cp_forward_speed_fr);
