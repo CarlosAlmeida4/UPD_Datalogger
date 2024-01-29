@@ -27,14 +27,15 @@ private:
 	void StageStatus();
 	// Show the recent Brake related Data
 	void BrakeData();
-
+	// Store run modal
+	void StoreRunModal();
 
 private:
 	std::unique_ptr<Walnut::Client> m_Client;
 	Walnut::UI::Console m_Console{ "Chat" };
 	std::string m_ServerIP;
 	std::string m_ServerPort;
-	std::filesystem::path m_ConnectionDetailsFilePath = "ConnectionDetails.yaml";
+
 
 	Walnut::Buffer m_ScratchBuffer;
 
@@ -43,6 +44,9 @@ private:
 	std::string m_Username;
 	uint32_t m_Color = 0xffffffff;
 
-	bool m_ConnectionModalOpen = false;
+	bool m_StoreRunModalOpen = false;
 	bool m_ShowSuccessfulConnectionMessage = false;
+	std::string m_StoragePath;
+	std::string m_StorageFileName;
+	
 };

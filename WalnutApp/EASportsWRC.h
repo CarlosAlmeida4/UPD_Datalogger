@@ -3,6 +3,7 @@
 #include <vector>
 #include <yaml-cpp/yaml.h>
 #include <fstream>
+#include <filesystem>
 
 /* * * * * Type Definitions * * * * */
 
@@ -220,7 +221,7 @@ class EASportsWRC
 		double dUnpackArray(EAoffset_t offset);
 		uint8_t bUnpackArray(EAoffset_t offset);
 		void HandleArray();
-		void StoreVector();
+		void StoreVector(const std::filesystem::path& filepath);
 	private:
 		void PrintArray();
 		void convertSeconds2Time();

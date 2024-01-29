@@ -134,8 +134,9 @@ void EASportsWRC::HandleArray()
 
 }
 
-void EASportsWRC::StoreVector()
+void EASportsWRC::StoreVector(const std::filesystem::path& filepath)
 {
+	
 	YAML::Emitter out;
 
 	EAtelemetrybyteMap_t EAtelemetrybyteMap;
@@ -220,7 +221,7 @@ void EASportsWRC::StoreVector()
 	}
 	out << YAML::EndMap;
 
-	std::ofstream fout("test.yaml");
+	std::ofstream fout(filepath);
 	fout << out.c_str();
 	
 	//Clear all values from vectors run
@@ -350,7 +351,7 @@ Utilities
 void EASportsWRC::PrintArray()
 {
 	//std::cout << "Speed    : " << (data.speed*3.6) << "\n" << std::flush;
-	std::cout << "Gear     : " << data.gear     << "\n" << std::flush;
+	//std::cout << "Gear     : " << data.gear     << "\n" << std::flush;
 	//std::cout << "Stear    : " << data.stear    << "\n" << std::flush;
 	//std::cout << "Clutch   : " << data.clutch   << "\n" << std::flush;
 	//std::cout << "Brake    : " << data.brake    << "\n" << std::flush;

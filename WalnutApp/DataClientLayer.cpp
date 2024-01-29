@@ -67,7 +67,6 @@ void DataClientLayer::OnUIRender()
 	ImGui::ShowDemoWindow();
 	ImPlot::CreateContext();
 	ImPlot::ShowDemoWindow();
-	//ConnectButton();
 	DriverInputsStatus();
 	StageStatus();
 	BrakeData();
@@ -130,13 +129,43 @@ void DataClientLayer::StageStatus()
 	float displayMicroSeconds = (l_EASportsWRC.data.current_seconds - (int)l_EASportsWRC.data.current_seconds)*1000;
 	ImGui::Text("Current Time: %d : %d : %1.0f", displayCurrentMinutes, displayCurrentSeconds , displayMicroSeconds);
 
-
+	
 	if (ImGui::Button("Store Run"))
 	{
-		l_EASportsWRC.StoreVector();
+		//if (l_EASportsWRC.TelemetryData_v.current_time.size() != 0)
+		{
+			ImGui::OpenPopup("Store Run");
+			// Always center this window when appearing
+			ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+			ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+		}
 	}
 
+	m_StoreRunModalOpen = ImGui::BeginPopupModal("Store Run", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+	if (m_StoreRunModalOpen) { StoreRunModal(); }
+
 	ImGui::End();
+}
+
+void DataClientLayer::StoreRunModal()
+{
+	ImGui::Text("Storage location");
+	ImGui::InputText("##Storage", &m_StoragePath);
+		
+	ImGui::Text("File name");
+	ImGui::InputText("##file", &m_StorageFileName);
+
+	ImGui::Separator();
+	if (ImGui::Button("Save"))
+	{
+		//FIXME: storage path is missing a \ at the end
+		std::string l_SCompletePath = m_StoragePath  + m_StorageFileName + ".yaml";
+		std::filesystem::path l_CompletePath = l_SCompletePath;
+		l_EASportsWRC.StoreVector(l_CompletePath);		
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Cancel")) { ImGui::CloseCurrentPopup(); }
+	ImGui::EndPopup();
 }
 
 void DataClientLayer::BrakeData()
