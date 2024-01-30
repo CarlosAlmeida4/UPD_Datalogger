@@ -16,8 +16,8 @@
 #include "UDPClient.h"
 
 #include "ImPlot/implot.h"
+#include "imfilebrowser.h"
 
-// required by MDF
 #include <filesystem>
 
 
@@ -147,13 +147,37 @@ void DataClientLayer::StageStatus()
 	ImGui::End();
 }
 
+//FIXME: check why Filebrowser is not working properly
 void DataClientLayer::StoreRunModal()
 {
+	// create a file browser instance
+	ImGui::FileBrowser fileDialog(ImGuiFileBrowserFlags_NoModal|ImGuiFileBrowserFlags_SelectDirectory| ImGuiFileBrowserFlags_EnterNewFilename);
+
+	// (optional) set browser properties
+	fileDialog.SetTitle("Choose Folder");
+	//fileDialog.SetTypeFilters({ ".yaml"});
+		
+	m_StoragePath = std::filesystem::current_path().string();
 	ImGui::Text("Storage location");
 	ImGui::InputText("##Storage", &m_StoragePath);
+	ImGui::SameLine();
+	
+	if (ImGui::Button("Select"))
+	{
+		fileDialog.Open();
 		
+	}
+	
 	ImGui::Text("File name");
 	ImGui::InputText("##file", &m_StorageFileName);
+
+	fileDialog.Display();
+
+	if (fileDialog.HasSelected())
+	{
+		std::cout << "Selected filename" << fileDialog.GetSelected().string() << std::endl;
+		fileDialog.ClearSelected();
+	}
 
 	ImGui::Separator();
 	if (ImGui::Button("Save"))
@@ -163,9 +187,12 @@ void DataClientLayer::StoreRunModal()
 		std::filesystem::path l_CompletePath = l_SCompletePath;
 		l_EASportsWRC.StoreVector(l_CompletePath);		
 	}
+
 	ImGui::SameLine();
 	if (ImGui::Button("Cancel")) { ImGui::CloseCurrentPopup(); }
+
 	ImGui::EndPopup();
+
 }
 
 void DataClientLayer::BrakeData()
