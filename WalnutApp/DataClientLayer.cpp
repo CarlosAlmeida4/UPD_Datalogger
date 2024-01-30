@@ -185,7 +185,8 @@ void DataClientLayer::StoreRunModal()
 		//FIXME: storage path is missing a \ at the end
 		std::string l_SCompletePath = m_StoragePath  + m_StorageFileName + ".yaml";
 		std::filesystem::path l_CompletePath = l_SCompletePath;
-		l_EASportsWRC.StoreVector(l_CompletePath);		
+		l_EASportsWRC.StoreVector(l_CompletePath);
+		ImGui::CloseCurrentPopup();
 	}
 
 	ImGui::SameLine();
