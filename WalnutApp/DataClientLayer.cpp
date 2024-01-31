@@ -155,11 +155,9 @@ void DataClientLayer::StoreRunModal()
 {
 	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
 		COINIT_DISABLE_OLE1DDE);
-	
-
-
+	static bool isPathEmpty = false;
 		
-	m_StoragePath = std::filesystem::current_path().string();
+	//m_StoragePath = std::filesystem::current_path().string();
 	ImGui::Text("Storage location");
 	ImGui::InputText("##Storage", &m_StoragePath);
 	ImGui::SameLine();
@@ -173,6 +171,12 @@ void DataClientLayer::StoreRunModal()
 			// Create the FileOpenDialog object.
 			hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
 				IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+			
+			DWORD dwOptions;
+			if (SUCCEEDED(pFileOpen->GetOptions(&dwOptions)))
+			{
+				pFileOpen->SetOptions(dwOptions | FOS_PICKFOLDERS);
+			}
 
 			if (SUCCEEDED(hr))
 			{
@@ -192,7 +196,9 @@ void DataClientLayer::StoreRunModal()
 						// Display the file name to the user.
 						if (SUCCEEDED(hr))
 						{
-							MessageBoxW(NULL, pszFilePath, L"File Path", MB_OK);
+							std::wstring wss = pszFilePath;
+							std::string sss(wss.begin(), wss.end());
+							m_StoragePath = sss;
 							CoTaskMemFree(pszFilePath);
 						}
 						pItem->Release();
@@ -209,15 +215,28 @@ void DataClientLayer::StoreRunModal()
 	ImGui::InputText("##file", &m_StorageFileName);
 
 	ImGui::Separator();
+	
+	if (isPathEmpty)
+	{
+		ImGui::Text("Please select a folder and insert a file name");
+	}
+	
 	if (ImGui::Button("Save"))
 	{
-		//FIXME: storage path is missing a \ at the end
-		std::string l_SCompletePath = m_StoragePath + "\\" + m_StorageFileName + ".yaml";
-		std::filesystem::path l_CompletePath = l_SCompletePath;
-		l_EASportsWRC.StoreVector(l_CompletePath);
-		ImGui::CloseCurrentPopup();
+		if (0 == m_StorageFileName.size() || 0 == m_StoragePath.size())
+		{
+			isPathEmpty = true;
+		}
+		else
+		{
+			isPathEmpty = false;
+			std::string l_SCompletePath = m_StoragePath + "\\" + m_StorageFileName + ".yaml";
+			std::filesystem::path l_CompletePath = l_SCompletePath;
+			l_EASportsWRC.StoreVector(l_CompletePath);
+			ImGui::CloseCurrentPopup();
+		}
 	}
-
+	
 	ImGui::SameLine();
 	if (ImGui::Button("Cancel")) { ImGui::CloseCurrentPopup(); }
 
