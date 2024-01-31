@@ -13,6 +13,9 @@
 #include <iostream>
 #include <fstream>
 
+#include <windows.h>
+#include <shobjidl.h> 
+
 #include "UDPClient.h"
 
 #include "ImPlot/implot.h"
@@ -150,12 +153,11 @@ void DataClientLayer::StageStatus()
 //FIXME: check why Filebrowser is not working properly
 void DataClientLayer::StoreRunModal()
 {
-	// create a file browser instance
-	ImGui::FileBrowser fileDialog(ImGuiFileBrowserFlags_NoModal|ImGuiFileBrowserFlags_SelectDirectory| ImGuiFileBrowserFlags_EnterNewFilename);
+	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
+		COINIT_DISABLE_OLE1DDE);
+	
 
-	// (optional) set browser properties
-	fileDialog.SetTitle("Choose Folder");
-	//fileDialog.SetTypeFilters({ ".yaml"});
+
 		
 	m_StoragePath = std::filesystem::current_path().string();
 	ImGui::Text("Storage location");
@@ -164,26 +166,53 @@ void DataClientLayer::StoreRunModal()
 	
 	if (ImGui::Button("Select"))
 	{
-		fileDialog.Open();
+		if (SUCCEEDED(hr))
+		{
+			IFileOpenDialog* pFileOpen;
+
+			// Create the FileOpenDialog object.
+			hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+				IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+
+			if (SUCCEEDED(hr))
+			{
+				// Show the Open dialog box.
+				hr = pFileOpen->Show(NULL);
+
+				// Get the file name from the dialog box.
+				if (SUCCEEDED(hr))
+				{
+					IShellItem* pItem;
+					hr = pFileOpen->GetResult(&pItem);
+					if (SUCCEEDED(hr))
+					{
+						PWSTR pszFilePath;
+						hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+
+						// Display the file name to the user.
+						if (SUCCEEDED(hr))
+						{
+							MessageBoxW(NULL, pszFilePath, L"File Path", MB_OK);
+							CoTaskMemFree(pszFilePath);
+						}
+						pItem->Release();
+					}
+				}
+				pFileOpen->Release();
+			}
+			CoUninitialize();
+		}
 		
 	}
 	
 	ImGui::Text("File name");
 	ImGui::InputText("##file", &m_StorageFileName);
 
-	fileDialog.Display();
-
-	if (fileDialog.HasSelected())
-	{
-		std::cout << "Selected filename" << fileDialog.GetSelected().string() << std::endl;
-		fileDialog.ClearSelected();
-	}
-
 	ImGui::Separator();
 	if (ImGui::Button("Save"))
 	{
 		//FIXME: storage path is missing a \ at the end
-		std::string l_SCompletePath = m_StoragePath  + m_StorageFileName + ".yaml";
+		std::string l_SCompletePath = m_StoragePath + "\\" + m_StorageFileName + ".yaml";
 		std::filesystem::path l_CompletePath = l_SCompletePath;
 		l_EASportsWRC.StoreVector(l_CompletePath);
 		ImGui::CloseCurrentPopup();
