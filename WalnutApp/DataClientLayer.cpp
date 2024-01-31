@@ -19,7 +19,6 @@
 #include "UDPClient.h"
 
 #include "ImPlot/implot.h"
-#include "imfilebrowser.h"
 
 #include <filesystem>
 
@@ -150,14 +149,12 @@ void DataClientLayer::StageStatus()
 	ImGui::End();
 }
 
-//FIXME: check why Filebrowser is not working properly
 void DataClientLayer::StoreRunModal()
 {
 	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
 		COINIT_DISABLE_OLE1DDE);
 	static bool isPathEmpty = false;
-		
-	//m_StoragePath = std::filesystem::current_path().string();
+
 	ImGui::Text("Storage location");
 	ImGui::InputText("##Storage", &m_StoragePath);
 	ImGui::SameLine();
