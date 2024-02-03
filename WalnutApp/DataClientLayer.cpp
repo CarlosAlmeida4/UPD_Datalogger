@@ -254,7 +254,7 @@ void DataClientLayer::BrakeData()
 	/*																							*/
 	/********************************************************************************************/
 
-	if (l_EASportsWRC.GetOnStage())
+	if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.brake_temp_bl.size() != 0)
 	{
 		current_time = l_EASportsWRC.TelemetryData_v.current_time.back();
 		float BrakePosition = l_EASportsWRC.TelemetryData_v.brake.back();
@@ -278,7 +278,7 @@ void DataClientLayer::BrakeData()
 		ImPlot::SetupAxisLimits(ImAxis_X1, current_time - history, current_time, ImGuiCond_Always);
 		ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1.1);
 		ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
-		if (l_EASportsWRC.GetOnStage())
+		if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.brake_temp_bl.size() != 0)
 		{
 			ImPlot::PlotLine("Brake Pedal", &BrakePos.Data[0].x, &BrakePos.Data[0].y, BrakePos.Data.size(), 0,  BrakePos.Offset, 2 * sizeof(float));
 			//std::cout << "Brake Position: " << BrakePos.Data[0].y << std::endl;
@@ -292,7 +292,7 @@ void DataClientLayer::BrakeData()
 		ImPlot::SetupAxisLimits(ImAxis_X1, current_time - history, current_time, ImGuiCond_Always);
 		ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 100);
 		ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
-		if (l_EASportsWRC.GetOnStage())
+		if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.brake_temp_bl.size() != 0)
 		{
 			ImPlot::PlotLine("BL", &BrakeTempbl.Data[0].x, &BrakeTempbl.Data[0].y, BrakeTempbl.Data.size(), 0, BrakeTempbl.Offset, 2 * sizeof(float));
 			ImPlot::PlotLine("BR", &BrakeTempbr.Data[0].x, &BrakeTempbr.Data[0].y, BrakeTempbr.Data.size(), 0, BrakeTempbr.Offset, 2 * sizeof(float));
@@ -315,7 +315,7 @@ void DataClientLayer::BrakeData()
 	static float values[2][2] = { {0,0},
 								{0,0} };
 
-	if (l_EASportsWRC.GetOnStage())// only need to check size of one
+	if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.brake_temp_bl.size() != 0)// only need to check size of one
 	{
 		values[0][0] = l_EASportsWRC.TelemetryData_v.brake_temp_fl.back();
 		values[0][1] = l_EASportsWRC.TelemetryData_v.brake_temp_fr.back();
