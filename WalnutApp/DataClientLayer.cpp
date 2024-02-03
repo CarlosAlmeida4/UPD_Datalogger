@@ -55,7 +55,7 @@ UDPClient lUDPClient("127.0.0.1", 20782);
 
 void DataClientLayer::OnAttach()
 {
-
+	ImPlot::CreateContext();
 }
 
 void DataClientLayer::OnDetach()
@@ -65,9 +65,7 @@ void DataClientLayer::OnDetach()
 
 void DataClientLayer::OnUIRender()
 {
-	//m_Console.OnUIRender();
 	ImGui::ShowDemoWindow();
-	ImPlot::CreateContext();
 	ImPlot::ShowDemoWindow();
 	DriverInputsStatus();
 	StageStatus();
