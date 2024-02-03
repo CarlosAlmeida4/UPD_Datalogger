@@ -134,8 +134,10 @@ void EASportsWRC::HandleArray()
 
 }
 
-void EASportsWRC::StoreVector()
+void EASportsWRC::StoreVector(const std::filesystem::path& filepath)
 {
+	SetOnStage(false);
+
 	YAML::Emitter out;
 
 	EAtelemetrybyteMap_t EAtelemetrybyteMap;
@@ -220,9 +222,11 @@ void EASportsWRC::StoreVector()
 	}
 	out << YAML::EndMap;
 
-	std::ofstream fout("test.yaml");
+	std::ofstream fout(filepath);
 	fout << out.c_str();
 	
+	ClearArray();
+
 	//Clear all values from vectors run
 	/*
 	TelemetryData_v.gear.clear();
@@ -319,6 +323,64 @@ void EASportsWRC::AddtoCircularBuf(EAtelemetry_data_t data_s)
 	}
 }
 
+void EASportsWRC::ClearArray()
+{
+	SetOnStage(false);
+	//Clear all values from vectors run
+	TelemetryData_v.gear.clear();						
+	
+	TelemetryData_v.VehSpeed.clear();
+	TelemetryData_v.VehTransSpeed.clear();
+	TelemetryData_v.VehPosX.clear();
+	TelemetryData_v.VehPosY.clear();
+	TelemetryData_v.VehPosZ.clear();
+	TelemetryData_v.VehSpdX.clear();
+	TelemetryData_v.VehSpdY.clear();
+	TelemetryData_v.VehSpdZ.clear();
+	TelemetryData_v.VehAccelX.clear();
+	TelemetryData_v.VehAccelY.clear();
+	TelemetryData_v.VehAccelZ.clear();
+	TelemetryData_v.VehLeftDirX.clear();
+	TelemetryData_v.VehLeftDirY.clear();
+	TelemetryData_v.VehLeftDirZ.clear();
+	TelemetryData_v.VehFwrdDirX.clear();
+	TelemetryData_v.VehFwrdDirY.clear();
+	TelemetryData_v.VehFwrdDirZ.clear();
+	TelemetryData_v.VehUpDirX.clear();
+	TelemetryData_v.VehUpDirY.clear();
+	TelemetryData_v.VehUpDirZ.clear();
+	TelemetryData_v.HubVertPosBL.clear();
+	TelemetryData_v.HubVertPosBR.clear();
+	TelemetryData_v.HubVertPosFL.clear();
+	TelemetryData_v.HubVertPosFR.clear();
+	TelemetryData_v.HubVertSpdBL.clear();
+	TelemetryData_v.HubVertSpdBR.clear();
+	TelemetryData_v.HubVertSpdFL.clear();
+	TelemetryData_v.HubVertSpdFR.clear();
+	TelemetryData_v.WheelSpeedBL.clear();
+	TelemetryData_v.WheelSpeedBR.clear();
+	TelemetryData_v.WheelSpeedFL.clear();
+	TelemetryData_v.WheelSpeedFR.clear();
+	TelemetryData_v.stear.clear();
+	TelemetryData_v.clutch.clear();
+	TelemetryData_v.brake.clear();
+	TelemetryData_v.throttle.clear();
+	TelemetryData_v.rpm.clear();
+	TelemetryData_v.handbrake.clear();
+	TelemetryData_v.current_time.clear();
+	TelemetryData_v.current_minutes.clear();
+	TelemetryData_v.current_seconds.clear();
+	TelemetryData_v.game_total_time.clear();
+	TelemetryData_v.game_delta_time.clear();
+	TelemetryData_v.brake_temp_br.clear();
+	TelemetryData_v.brake_temp_fl.clear();
+	TelemetryData_v.brake_temp_fr.clear();
+	TelemetryData_v.brake_temp_bl.clear();
+	
+	TelemetryData_v.track_length.clear();
+	TelemetryData_v.lap_distance.clear();
+}
+
 /***
 
 Stage Handlers
@@ -350,7 +412,7 @@ Utilities
 void EASportsWRC::PrintArray()
 {
 	//std::cout << "Speed    : " << (data.speed*3.6) << "\n" << std::flush;
-	std::cout << "Gear     : " << data.gear     << "\n" << std::flush;
+	//std::cout << "Gear     : " << data.gear     << "\n" << std::flush;
 	//std::cout << "Stear    : " << data.stear    << "\n" << std::flush;
 	//std::cout << "Clutch   : " << data.clutch   << "\n" << std::flush;
 	//std::cout << "Brake    : " << data.brake    << "\n" << std::flush;

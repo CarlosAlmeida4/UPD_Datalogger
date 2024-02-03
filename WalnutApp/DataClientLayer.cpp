@@ -13,11 +13,13 @@
 #include <iostream>
 #include <fstream>
 
+#include <windows.h>
+#include <shobjidl.h> 
+
 #include "UDPClient.h"
 
 #include "ImPlot/implot.h"
 
-// required by MDF
 #include <filesystem>
 
 
@@ -53,7 +55,7 @@ UDPClient lUDPClient("127.0.0.1", 20782);
 
 void DataClientLayer::OnAttach()
 {
-
+	ImPlot::CreateContext();
 }
 
 void DataClientLayer::OnDetach()
@@ -63,11 +65,8 @@ void DataClientLayer::OnDetach()
 
 void DataClientLayer::OnUIRender()
 {
-	//m_Console.OnUIRender();
 	ImGui::ShowDemoWindow();
-	ImPlot::CreateContext();
 	ImPlot::ShowDemoWindow();
-	//ConnectButton();
 	DriverInputsStatus();
 	StageStatus();
 	BrakeData();
@@ -107,7 +106,6 @@ void DataClientLayer::DriverInputsStatus()
 	//*******************************Steering
 	sprintf(buf, "%d", (int)(l_EASportsWRC.data.stear));
 	ImGui::SliderFloat("Steering", &l_EASportsWRC.data.stear, -1.0f, 1.0f, "%.3f", 1);
-
 	
 	ImGui::End();
 }
@@ -130,13 +128,118 @@ void DataClientLayer::StageStatus()
 	float displayMicroSeconds = (l_EASportsWRC.data.current_seconds - (int)l_EASportsWRC.data.current_seconds)*1000;
 	ImGui::Text("Current Time: %d : %d : %1.0f", displayCurrentMinutes, displayCurrentSeconds , displayMicroSeconds);
 
-
+	
 	if (ImGui::Button("Store Run"))
 	{
-		l_EASportsWRC.StoreVector();
+		//if (l_EASportsWRC.TelemetryData_v.current_time.size() != 0)
+		{
+			ImGui::OpenPopup("Store Run");
+			// Always center this window when appearing
+			ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+			ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+		}
 	}
+	ImGui::SameLine();
+	if (ImGui::Button("Clear Run"))
+	{
+		l_EASportsWRC.ClearArray();
+	}
+	m_StoreRunModalOpen = ImGui::BeginPopupModal("Store Run", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+	if (m_StoreRunModalOpen) { StoreRunModal(); }
 
 	ImGui::End();
+}
+
+void DataClientLayer::StoreRunModal()
+{
+	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
+		COINIT_DISABLE_OLE1DDE);
+	static bool isPathEmpty = false;
+
+	ImGui::Text("Storage location");
+	ImGui::InputText("##Storage", &m_StoragePath);
+	ImGui::SameLine();
+	
+	if (ImGui::Button("Select"))
+	{
+		if (SUCCEEDED(hr))
+		{
+			IFileOpenDialog* pFileOpen;
+
+			// Create the FileOpenDialog object.
+			hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+				IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+			
+			DWORD dwOptions;
+			if (SUCCEEDED(pFileOpen->GetOptions(&dwOptions)))
+			{
+				pFileOpen->SetOptions(dwOptions | FOS_PICKFOLDERS);
+			}
+
+			if (SUCCEEDED(hr))
+			{
+				// Show the Open dialog box.
+				hr = pFileOpen->Show(NULL);
+
+				// Get the file name from the dialog box.
+				if (SUCCEEDED(hr))
+				{
+					IShellItem* pItem;
+					hr = pFileOpen->GetResult(&pItem);
+					if (SUCCEEDED(hr))
+					{
+						PWSTR pszFilePath;
+						hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+
+						// Display the file name to the user.
+						if (SUCCEEDED(hr))
+						{
+							std::wstring wss = pszFilePath;
+							std::string sss(wss.begin(), wss.end());
+							m_StoragePath = sss;
+							CoTaskMemFree(pszFilePath);
+						}
+						pItem->Release();
+					}
+				}
+				pFileOpen->Release();
+			}
+			CoUninitialize();
+		}
+		
+	}
+	
+	ImGui::Text("File name");
+	ImGui::InputText("##file", &m_StorageFileName);
+
+	ImGui::Separator();
+	
+	if (isPathEmpty)
+	{
+		ImGui::Text("Please select a folder and insert a file name");
+	}
+	
+	if (ImGui::Button("Save"))
+	{
+		if (0 == m_StorageFileName.size() || 0 == m_StoragePath.size())
+		{
+			isPathEmpty = true;
+		}
+		else
+		{
+			isPathEmpty = false;
+			std::string l_SCompletePath = m_StoragePath + "\\" + m_StorageFileName + ".yaml";
+			std::filesystem::path l_CompletePath = l_SCompletePath;
+			l_EASportsWRC.StoreVector(l_CompletePath);
+			ImGui::CloseCurrentPopup();
+		}
+	}
+	
+	ImGui::SameLine();
+	if (ImGui::Button("Cancel")) { ImGui::CloseCurrentPopup(); }
+
+	ImGui::EndPopup();
+
 }
 
 void DataClientLayer::BrakeData()
@@ -151,7 +254,7 @@ void DataClientLayer::BrakeData()
 	/*																							*/
 	/********************************************************************************************/
 
-	if (l_EASportsWRC.TelemetryData_v.brake_temp_bl.size() != 0)
+	if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.brake_temp_bl.size() != 0)
 	{
 		current_time = l_EASportsWRC.TelemetryData_v.current_time.back();
 		float BrakePosition = l_EASportsWRC.TelemetryData_v.brake.back();
@@ -175,7 +278,7 @@ void DataClientLayer::BrakeData()
 		ImPlot::SetupAxisLimits(ImAxis_X1, current_time - history, current_time, ImGuiCond_Always);
 		ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1.1);
 		ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
-		if (BrakePos.Data.Size != 0)
+		if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.brake_temp_bl.size() != 0)
 		{
 			ImPlot::PlotLine("Brake Pedal", &BrakePos.Data[0].x, &BrakePos.Data[0].y, BrakePos.Data.size(), 0,  BrakePos.Offset, 2 * sizeof(float));
 			//std::cout << "Brake Position: " << BrakePos.Data[0].y << std::endl;
@@ -189,7 +292,7 @@ void DataClientLayer::BrakeData()
 		ImPlot::SetupAxisLimits(ImAxis_X1, current_time - history, current_time, ImGuiCond_Always);
 		ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 100);
 		ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
-		if (BrakeTempbl.Data.Size != 0)// only need to check size of one
+		if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.brake_temp_bl.size() != 0)
 		{
 			ImPlot::PlotLine("BL", &BrakeTempbl.Data[0].x, &BrakeTempbl.Data[0].y, BrakeTempbl.Data.size(), 0, BrakeTempbl.Offset, 2 * sizeof(float));
 			ImPlot::PlotLine("BR", &BrakeTempbr.Data[0].x, &BrakeTempbr.Data[0].y, BrakeTempbr.Data.size(), 0, BrakeTempbr.Offset, 2 * sizeof(float));
@@ -212,7 +315,7 @@ void DataClientLayer::BrakeData()
 	static float values[2][2] = { {0,0},
 								{0,0} };
 
-	if (BrakeTempbl.Data.Size != 0)// only need to check size of one
+	if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.brake_temp_bl.size() != 0)// only need to check size of one
 	{
 		values[0][0] = l_EASportsWRC.TelemetryData_v.brake_temp_fl.back();
 		values[0][1] = l_EASportsWRC.TelemetryData_v.brake_temp_fr.back();

@@ -3,6 +3,7 @@
 #include <vector>
 #include <yaml-cpp/yaml.h>
 #include <fstream>
+#include <filesystem>
 
 /* * * * * Type Definitions * * * * */
 
@@ -199,8 +200,7 @@ static const size_t CircularBufferMaxSize = 1;
 
 class EASportsWRC
 {
-	public:
-		bool OnStage_b = false;
+	public:	
 		std::array<uint8_t, 265> UDPReceiveArray{};
 		EAtelemetry_data_t data; //keep, fastest way to get the latest data
 		//std::vector<EAtelemetry_data_t> TelemetryData_v;
@@ -210,6 +210,7 @@ class EASportsWRC
 			uint8_t currentIndex = 0;
 			std::array<EAtelemetry_data_t, CircularBufferMaxSize> circularBuffer;
 		}EAcircularBuff_s;
+		bool OnStage_b = false;
 		
 
 	public:
@@ -220,7 +221,9 @@ class EASportsWRC
 		double dUnpackArray(EAoffset_t offset);
 		uint8_t bUnpackArray(EAoffset_t offset);
 		void HandleArray();
-		void StoreVector();
+		void StoreVector(const std::filesystem::path& filepath);
+		bool isOnStage();
+		void ClearArray();
 	private:
 		void PrintArray();
 		void convertSeconds2Time();
