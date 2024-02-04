@@ -18,6 +18,8 @@ public:
 	virtual void OnDetach() override;
 	virtual void OnUIRender() override;
 
+	void SetShowBrakeData(bool setval);
+	void SetDriverInputsStatus(bool setval);
 
 private:
 	
@@ -29,6 +31,11 @@ private:
 	void BrakeData();
 	// Store run modal
 	void StoreRunModal();
+	//Plot multiple signals
+	void MultiSignalPlot();
+
+public:
+
 
 private:
 	std::unique_ptr<Walnut::Client> m_Client;
@@ -48,5 +55,8 @@ private:
 	bool m_ShowSuccessfulConnectionMessage = false;
 	std::string m_StoragePath;
 	std::string m_StorageFileName;
+
+	bool m_ShowBrakeData = false;
+	bool m_ShowDriverInputStatus = false;
 	
 };

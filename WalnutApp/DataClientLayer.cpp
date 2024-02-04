@@ -53,6 +53,12 @@ struct ScrollingBuffer {
 
 UDPClient lUDPClient("127.0.0.1", 20782);
 
+/***
+
+Handlers
+
+***/
+
 void DataClientLayer::OnAttach()
 {
 	ImPlot::CreateContext();
@@ -67,9 +73,9 @@ void DataClientLayer::OnUIRender()
 {
 	ImGui::ShowDemoWindow();
 	ImPlot::ShowDemoWindow();
-	DriverInputsStatus();
 	StageStatus();
-	BrakeData();
+	if(m_ShowDriverInputStatus) DriverInputsStatus();
+	if (m_ShowBrakeData) BrakeData();
 	if (!lUDPClient.isRunning_b)
 	{
 		lUDPClient.startClient();
@@ -77,6 +83,11 @@ void DataClientLayer::OnUIRender()
 
 }
 
+/***
+
+Windows
+
+***/
 
 void DataClientLayer::DriverInputsStatus()
 {
@@ -347,3 +358,18 @@ void DataClientLayer::BrakeData()
 	ImGui::End();
 }
 
+/***
+
+Getters Setters
+
+***/
+
+void DataClientLayer::SetShowBrakeData(bool setval)
+{
+	m_ShowBrakeData = setval;
+}
+
+void DataClientLayer::SetDriverInputsStatus(bool setval)
+{
+	m_ShowDriverInputStatus = setval;
+}
