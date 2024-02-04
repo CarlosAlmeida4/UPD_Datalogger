@@ -358,6 +358,11 @@ void DataClientLayer::BrakeData()
 	ImGui::End();
 }
 
+void DataClientLayer::MultiSignalPlot()
+{
+
+}
+
 /***
 
 Getters Setters
