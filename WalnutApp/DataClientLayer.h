@@ -20,6 +20,7 @@ public:
 
 	void SetShowBrakeData(bool setval);
 	void SetDriverInputsStatus(bool setval);
+	void SetMultiSignalPlot(bool setval);
 
 private:
 	
@@ -58,5 +59,6 @@ private:
 
 	bool m_ShowBrakeData = false;
 	bool m_ShowDriverInputStatus = false;
+	bool m_ShowMultiSignalPlot = false;
 	
 };

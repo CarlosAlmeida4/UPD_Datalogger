@@ -74,6 +74,7 @@ void DataClientLayer::OnUIRender()
 	ImGui::ShowDemoWindow();
 	ImPlot::ShowDemoWindow();
 	StageStatus();
+	if (m_ShowMultiSignalPlot) MultiSignalPlot();
 	if(m_ShowDriverInputStatus) DriverInputsStatus();
 	if (m_ShowBrakeData) BrakeData();
 	if (!lUDPClient.isRunning_b)
@@ -358,9 +359,53 @@ void DataClientLayer::BrakeData()
 	ImGui::End();
 }
 
+ImPlotPoint SinewaveGetter(int i, void* data) {
+	float f = *(float*)data;
+	return ImPlotPoint(i, sinf(f * i));
+}
+
 void DataClientLayer::MultiSignalPlot()
 {
+	static ImPlotSubplotFlags flags = ImPlotSubplotFlags_ShareItems;
+	static int rows = 4;
+	static int cols = 4;
+	static int id[] = { 0,1,2,3,4,5 };
+	static int curj = -1;
 
+	ImGui::Begin("Signal Plots");
+
+	if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1, 400), flags)) 
+	{
+		for (int i = 0; i < rows * cols; ++i) {
+			if (ImPlot::BeginPlot("")) {
+				float fc = 0.01f;
+				ImPlot::PlotLineG("common", SinewaveGetter, &fc, 1000);
+				for (int j = 0; j < 6; ++j) {
+					if (id[j] == i) {
+						char label[8];
+						float fj = 0.01f * (j + 2);
+						sprintf(label, "data%d", j);
+						ImPlot::PlotLineG(label, SinewaveGetter, &fj, 1000);
+						if (ImPlot::BeginDragDropSourceItem(label)) {
+							curj = j;
+							ImGui::SetDragDropPayload("MY_DND", NULL, 0);
+							ImGui::TextUnformatted(label);
+							ImPlot::EndDragDropSource();
+						}
+					}
+				}
+				if (ImPlot::BeginDragDropTargetPlot()) {
+					if (ImGui::AcceptDragDropPayload("MY_DND"))
+						id[curj] = i;
+					ImPlot::EndDragDropTarget();
+				}
+				ImPlot::EndPlot();
+			}
+		}
+		ImPlot::EndSubplots();
+	}
+
+	ImGui::End();
 }
 
 /***
@@ -377,4 +422,9 @@ void DataClientLayer::SetShowBrakeData(bool setval)
 void DataClientLayer::SetDriverInputsStatus(bool setval)
 {
 	m_ShowDriverInputStatus = setval;
+}
+
+void DataClientLayer::SetMultiSignalPlot(bool setval)
+{
+	m_ShowMultiSignalPlot = setval;
 }

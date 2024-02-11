@@ -28,6 +28,10 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 		}
 		if (ImGui::BeginMenu("View"))
 		{
+			if (ImGui::MenuItem("Plot all signals"))
+			{
+				dataclientlayer->SetMultiSignalPlot(true);
+			}
 			if (ImGui::MenuItem("Brake Data"))
 			{
 				dataclientlayer->SetShowBrakeData(true);
@@ -40,6 +44,7 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 			{
 				dataclientlayer->SetShowBrakeData(false);
 				dataclientlayer->SetDriverInputsStatus(false);
+				dataclientlayer->SetMultiSignalPlot(false);
 			}
 			ImGui::EndMenu();
 		}
