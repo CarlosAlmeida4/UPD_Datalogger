@@ -16,7 +16,7 @@
 #include <windows.h>
 #include <shobjidl.h> 
 
-#include "EASportsWRC.h"
+#include "src/EASportsWRC/EASportsWRC.h"
 
 #include "ImPlot/implot.h"
 
