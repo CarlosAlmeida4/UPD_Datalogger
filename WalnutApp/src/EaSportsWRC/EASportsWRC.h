@@ -4,6 +4,12 @@
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 #include <filesystem>
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#include <string>
+#include <thread>
+
+
 
 /* * * * * Type Definitions * * * * */
 
@@ -205,6 +211,12 @@ class EASportsWRC
 		EAtelemetry_data_t data; //keep, fastest way to get the latest data
 		//std::vector<EAtelemetry_data_t> TelemetryData_v;
 		EAtelemetry_data_Vector_t TelemetryData_v;
+
+		std::string  SERVER_IP_s;
+		int PORT_i;
+		SOCKET serverSocket;
+		std::thread m_NetworkThread;
+		bool isRunning_b = false;
 	private:
 		struct EAcircularBuff_t {
 			uint8_t currentIndex = 0;
@@ -214,20 +226,27 @@ class EASportsWRC
 		
 
 	public:
+		EASportsWRC(std::string serverIP_l, int port_l) : SERVER_IP_s(serverIP_l), PORT_i(port_l) {}
+		~EASportsWRC();
+
 		void StartStage();
 		bool GetOnStage();
 		void SetOnStage(bool value);
 		float UnpackArray(EAoffset_t offset);
 		double dUnpackArray(EAoffset_t offset);
 		uint8_t bUnpackArray(EAoffset_t offset);
-		void HandleArray();
 		void StoreVector(const std::filesystem::path& filepath);
 		bool isOnStage();
 		void ClearArray();
+		int startClient();
+		void stopClient();
+		void receiveData();
+
 	private:
 		void PrintArray();
 		void convertSeconds2Time();
 		void AddtoCircularBuf(EAtelemetry_data_t data_s);
+		void HandleArray();
 
 };
 

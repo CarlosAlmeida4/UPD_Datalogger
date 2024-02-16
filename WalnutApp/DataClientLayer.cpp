@@ -16,7 +16,7 @@
 #include <windows.h>
 #include <shobjidl.h> 
 
-#include "UDPClient.h"
+#include "src/EASportsWRC/EASportsWRC.h"
 
 #include "ImPlot/implot.h"
 
@@ -51,7 +51,7 @@ struct ScrollingBuffer {
 	}
 };
 
-UDPClient lUDPClient("127.0.0.1", 20782);
+EASportsWRC l_EASportsWRC("127.0.0.1", 20782);
 
 void DataClientLayer::OnAttach()
 {
@@ -70,9 +70,9 @@ void DataClientLayer::OnUIRender()
 	DriverInputsStatus();
 	StageStatus();
 	BrakeData();
-	if (!lUDPClient.isRunning_b)
+	if (!l_EASportsWRC.isRunning_b)
 	{
-		lUDPClient.startClient();
+		l_EASportsWRC.startClient();
 	}
 
 }
