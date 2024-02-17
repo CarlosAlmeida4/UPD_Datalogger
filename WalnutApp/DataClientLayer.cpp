@@ -93,7 +93,7 @@ Windows
 
 void DataClientLayer::DriverInputsStatus()
 {
-	ImGui::Begin("Driver Inputs");
+	ImGui::Begin("Driver Inputs",&m_ShowDriverInputStatus);
 	char buf[32];
 
 	//*******************************Throttle
@@ -260,7 +260,7 @@ void DataClientLayer::BrakeData()
 	static ScrollingBuffer BrakePos, BrakeTempbl, BrakeTempbr, BrakeTempfl, BrakeTempfr;
 	float current_time = 0;
 
-	ImGui::Begin("Brake Data");
+	ImGui::Begin("Brake Data", &m_ShowBrakeData);
 	/********************************************************************************************/
 	/*																							*/
 	/*											Brake Plots										*/
@@ -373,7 +373,7 @@ void DataClientLayer::MultiSignalPlot()
 	static int id[] = { 0,1,2,3,4,5 };
 	static int curj = -1;
 
-	ImGui::Begin("Signal Plots");
+	ImGui::Begin("Signal Plots", &m_ShowMultiSignalPlot);
 
 	if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1, 400), flags)) 
 	{
@@ -413,8 +413,9 @@ void DataClientLayer::VehiclePosition()
 {
 	static ScrollingBuffer PosX, PosY, PosZ, PosXZ;
 	float current_time = 0;
+	static bool isOpen;
 
-	ImGui::Begin("Vehicle Position");
+	ImGui::Begin("Vehicle Position",&m_ShowPositionPlot);
 
 
 	if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.VehPosX.size() != 0)
