@@ -411,15 +411,11 @@ void DataClientLayer::MultiSignalPlot()
 
 void DataClientLayer::VehiclePosition()
 {
-	static ScrollingBuffer PosX, PosY, PosZ;
+	static ScrollingBuffer PosX, PosY, PosZ, PosXZ;
 	float current_time = 0;
 
-	ImGui::Begin("Brake Data");
-	/********************************************************************************************/
-	/*																							*/
-	/*											Brake Plots										*/
-	/*																							*/
-	/********************************************************************************************/
+	ImGui::Begin("Vehicle Position");
+
 
 	if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.VehPosX.size() != 0)
 	{
@@ -428,6 +424,8 @@ void DataClientLayer::VehiclePosition()
 		PosX.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.VehPosX.back());
 		PosY.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.VehPosY.back());
 		PosZ.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.VehPosZ.back());
+		//TODO: find a way to represent this
+		//PosXZ.AddPoint(l_EASportsWRC.TelemetryData_v.VehPosX.back(), l_EASportsWRC.TelemetryData_v.VehPosZ.back());
 	}
 
 	static float history = 10.0f;
@@ -477,6 +475,7 @@ void DataClientLayer::VehiclePosition()
 		}
 		ImPlot::EndPlot();
 	}
+
 	ImGui::End();
 }
 
