@@ -36,6 +36,10 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 			{
 				dataclientlayer->SetShowBrakeData(true);
 			}
+			if (ImGui::MenuItem("Vehicle Position"))
+			{
+				dataclientlayer->SetPositionPlot(true);
+			}
 			if (ImGui::MenuItem("Driver Inputs"))
 			{
 				dataclientlayer->SetDriverInputsStatus(true);
@@ -45,6 +49,7 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 				dataclientlayer->SetShowBrakeData(false);
 				dataclientlayer->SetDriverInputsStatus(false);
 				dataclientlayer->SetMultiSignalPlot(false);
+				dataclientlayer->SetPositionPlot(false);
 			}
 			ImGui::EndMenu();
 		}

@@ -21,6 +21,7 @@ public:
 	void SetShowBrakeData(bool setval);
 	void SetDriverInputsStatus(bool setval);
 	void SetMultiSignalPlot(bool setval);
+	void SetPositionPlot(bool setval);
 
 private:
 	
@@ -34,6 +35,8 @@ private:
 	void StoreRunModal();
 	//Plot multiple signals
 	void MultiSignalPlot();
+	//Plot vehicle position
+	void VehiclePosition();
 
 public:
 
@@ -60,5 +63,6 @@ private:
 	bool m_ShowBrakeData = false;
 	bool m_ShowDriverInputStatus = false;
 	bool m_ShowMultiSignalPlot = false;
+	bool m_ShowPositionPlot = false;
 	
 };

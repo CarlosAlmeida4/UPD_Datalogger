@@ -200,7 +200,6 @@ struct EAtelemetry_data_Vector_t {
 	EAtelemetrydouble_t lap_distance;
 };
 
-
 //Configurable circular buffer max size
 static const size_t CircularBufferMaxSize = 1;
 
