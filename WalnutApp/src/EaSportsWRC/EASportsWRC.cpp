@@ -432,7 +432,12 @@ void EASportsWRC::PrintArray()
 	//std::cout << "stage_current_time: " << data.current_time << "\n" << std::flush;
 	//std::cout << "stage_current_distance: " << data.lap_distance << "\n" << std::flush;
 	//std::cout << "stage_length: " << data.track_length << "\n" << std::flush;
+<<<<<<< Updated upstream
 	std::cout << "FourCC: " << data.FourCC<< "\n" << std::flush;
+=======
+	std::cout << "FourCC: " << data.FourCC << "\n" << std::flush;
+	
+>>>>>>> Stashed changes
 
 }
 

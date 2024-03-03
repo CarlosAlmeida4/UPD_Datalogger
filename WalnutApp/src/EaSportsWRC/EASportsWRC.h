@@ -24,7 +24,11 @@ enum class EAoffset_t : uint16_t {
 	FourCCA = 0,
 	FourCCB = 1,
 	FourCCC = 2,
+<<<<<<< Updated upstream
 	FourCCD = 4,
+=======
+	FourCCD = 3,
+>>>>>>> Stashed changes
 	packet_uid = 4,
 	shiftlights_fraction = 12,
 	shiftlights_rpm_start = 16,
