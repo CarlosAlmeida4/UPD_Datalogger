@@ -21,7 +21,10 @@ typedef std::map<std::string, EAtelemetrydouble_t> EAtelemetrydoubleMap_t;
 typedef std::map<std::string, EAtelemetrybyte_t> EAtelemetrybyteMap_t;
 
 enum class EAoffset_t : uint16_t {
-	FourCC = 0,
+	FourCCA = 0,
+	FourCCB = 1,
+	FourCCC = 2,
+	FourCCD = 4,
 	packet_uid = 4,
 	shiftlights_fraction = 12,
 	shiftlights_rpm_start = 16,
@@ -86,6 +89,8 @@ enum class EAoffset_t : uint16_t {
 
 struct EAtelemetry_data_t {
 	
+	char FourCC[4];
+
 	int gear;
 	
 	float VehSpeed;
@@ -205,27 +210,34 @@ static const size_t CircularBufferMaxSize = 1;
 
 class EASportsWRC
 {
+
 	public:	
 		std::array<uint8_t, 265> UDPReceiveArray{};
 		EAtelemetry_data_t data; //keep, fastest way to get the latest data
 		//std::vector<EAtelemetry_data_t> TelemetryData_v;
 		EAtelemetry_data_Vector_t TelemetryData_v;
 
-		std::string  SERVER_IP_s;
-		int PORT_i;
-		SOCKET serverSocket;
-		std::thread m_NetworkThread;
+		
+		int PORT_update, PORT_resume, PORT_pause, PORT_end, PORT_start;
+		
 		bool isRunning_b = false;
 	private:
+		std::string  SERVER_IP_s;
+		struct EAConnections_t {
+			SOCKET connectionSocket;
+			int port;
+			int bytesRead;
+		};
 		struct EAcircularBuff_t {
 			uint8_t currentIndex = 0;
 			std::array<EAtelemetry_data_t, CircularBufferMaxSize> circularBuffer;
 		}EAcircularBuff_s;
+		std::thread m_NetworkThread;
+		std::array< EAConnections_t, 5> EAConnections_s;
 		bool OnStage_b = false;
-		
 
 	public:
-		EASportsWRC(std::string serverIP_l, int port_l) : SERVER_IP_s(serverIP_l), PORT_i(port_l) {}
+		EASportsWRC(std::string serverIP_l, int port_update, int port_resume, int port_pause, int port_end, int port_start);
 		~EASportsWRC();
 
 		void StartStage();
@@ -242,6 +254,7 @@ class EASportsWRC
 		void receiveData();
 
 	private:
+		uint8_t LaunchConnection(SOCKET &lsocket,int port);
 		void PrintArray();
 		void convertSeconds2Time();
 		void AddtoCircularBuf(EAtelemetry_data_t data_s);

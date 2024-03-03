@@ -51,7 +51,7 @@ struct ScrollingBuffer {
 	}
 };
 
-EASportsWRC l_EASportsWRC("127.0.0.1", 20782);
+EASportsWRC l_EASportsWRC("127.0.0.1", 20782,20781,20780,20779,20778);
 
 /***
 

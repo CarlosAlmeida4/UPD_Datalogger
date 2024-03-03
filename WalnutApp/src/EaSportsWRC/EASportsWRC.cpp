@@ -19,6 +19,11 @@ Array Operations
 void EASportsWRC::HandleArray()
 {
 	EAtelemetry_data_t data_s;
+	data_s.FourCC[0] = (char)bUnpackArray(EAoffset_t::FourCCA);
+	data_s.FourCC[1] = (char)bUnpackArray(EAoffset_t::FourCCB);
+	data_s.FourCC[2] = (char)bUnpackArray(EAoffset_t::FourCCC);
+	data_s.FourCC[3] = (char)bUnpackArray(EAoffset_t::FourCCD);
+	
 	data_s.gear = (int)bUnpackArray(EAoffset_t::vehicle_gear_index);
 	
 	data_s.VehSpeed = UnpackArray(EAoffset_t::vehicle_speed);
@@ -74,7 +79,7 @@ void EASportsWRC::HandleArray()
 	
 	data = data_s;
 	convertSeconds2Time();
-	//PrintArray();
+	PrintArray();
 	
 	TelemetryData_v.gear.push_back(data_s.gear);
 	
@@ -427,6 +432,7 @@ void EASportsWRC::PrintArray()
 	//std::cout << "stage_current_time: " << data.current_time << "\n" << std::flush;
 	//std::cout << "stage_current_distance: " << data.lap_distance << "\n" << std::flush;
 	//std::cout << "stage_length: " << data.track_length << "\n" << std::flush;
+	std::cout << "FourCC: " << data.FourCC<< "\n" << std::flush;
 
 }
 
@@ -454,47 +460,33 @@ int EASportsWRC::startClient()
 {
 	if (!isRunning_b)
 	{
-		// Initialize Winsock
-		WSADATA wsaData;
-		if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-			std::cerr << "Failed to initialize Winsock" << std::endl;
+		uint8_t socketBindingResult = 0;
+		for (auto &i : EAConnections_s)
+		{
+			socketBindingResult = LaunchConnection(i.connectionSocket, i.port);
+		}
+
+		if (1 == socketBindingResult)
+		{
+			std::cout << "Error binding socket" << std::endl;
 			return 1;
 		}
 
-		// Create a UDP socket
-		serverSocket = socket(AF_INET, SOCK_DGRAM, 0);
-		if (serverSocket == INVALID_SOCKET) {
-			std::cerr << "Error creating socket" << std::endl;
-			WSACleanup();
-			return 1;
-		}
-
-		// Set up the server address
-		sockaddr_in serverAddr;
-		serverAddr.sin_family = AF_INET;
-		serverAddr.sin_addr.s_addr = INADDR_ANY;
-		serverAddr.sin_port = htons(PORT_i);
-
-		// Bind the socket to the specified port
-		if (bind(serverSocket, (const sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-			std::cerr << "Error binding socket" << std::endl;
-			closesocket(serverSocket);
-			WSACleanup();
-			return 1;
-		}
-
-		std::cout << "UDP server listening on port " << PORT_i << std::endl;
 		isRunning_b = true;
-
-		m_NetworkThread = std::thread([this]() { receiveData(); });
-
+		//TODO: One thread is reading all sockets, maybe its better to have a thread per socket?
+		m_NetworkThread = std::thread([this]() { receiveData();});
+		
 	}
-
+	return 0;
 }
 
 void EASportsWRC::stopClient()
 {
-	closesocket(serverSocket);
+	for (auto& i : EAConnections_s)
+	{
+		closesocket(i.connectionSocket);
+		
+	}
 	WSACleanup();
 	isRunning_b = false;
 	if (m_NetworkThread.joinable())
@@ -510,35 +502,99 @@ void EASportsWRC::receiveData()
 		uint8_t uintBuffer[265];
 		sockaddr_in clientAddr;
 		int clientAddrLen = sizeof(clientAddr);
-		int bytesRead = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (sockaddr*)&clientAddr, &clientAddrLen);
+		for (auto& i : EAConnections_s)
+		{
+			i.bytesRead = recvfrom(i.connectionSocket, buffer, sizeof(buffer), 0, (sockaddr*)&clientAddr, &clientAddrLen);
+			if (i.bytesRead == SOCKET_ERROR) {
+				std::cerr << "Error receiving message" << std::endl;
+			}
+			else {
+				//buffer[bytesRead] = '\0';
+				//std::cout << "Size of buffer" << bytesRead << std::endl;
+				if (i.bytesRead <= 264) //Full size packet for Dirt Rally 2
+				{
+					//check if firts activation
+					if (!GetOnStage()) StartStage();
+					memcpy(UDPReceiveArray.data(), buffer, sizeof(buffer));
+					HandleArray();
+				}
+				else
+				{
+					std::cout << "Received package with a different size " << sizeof(buffer) << std::endl;
+				}
+			}
+		}
+		//int bytesRead = recvfrom(socket, buffer, sizeof(buffer), 0, (sockaddr*)&clientAddr, &clientAddrLen);
 		//int bytesRead = recvfrom(serverSocket, uintBuffer, sizeof(uintBuffer), 0, (sockaddr*)&clientAddr, &clientAddrLen);
 
-		if (bytesRead == SOCKET_ERROR) {
-			std::cerr << "Error receiving message" << std::endl;
-		}
-		else {
-			//buffer[bytesRead] = '\0';
-			//std::cout << "Size of buffer" << bytesRead << std::endl;
-			if (bytesRead <= 264) //Full size packet for Dirt Rally 2
-			{
-				//check if firts activation
-				if (!GetOnStage()) StartStage();
-				memcpy(UDPReceiveArray.data(), buffer, sizeof(buffer));
-				//std::cout << "Received message from client: " << l_DirtTwo.UDPReceiveArray.data() << std::endl;
-				HandleArray();
-			}
-			else
-			{
-				std::cout << "Received package with a different size " << sizeof(buffer) << std::endl;
-			}
-		}
 	}
 
 }
 
+uint8_t EASportsWRC::LaunchConnection(SOCKET &lsocket,int port)
+{
+	// Initialize Winsock
+	WSADATA wsaData;
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+		std::cerr << "Failed to initialize Winsock" << std::endl;
+		return 1;
+	}
+
+	// Create a UDP socket
+	lsocket = socket(AF_INET, SOCK_DGRAM, 0);
+	if (lsocket == INVALID_SOCKET) {
+		std::cerr << "Error creating socket" << std::endl;
+		WSACleanup();
+		return 1;
+	}
+
+	// Set up the server address
+	sockaddr_in serverAddr;
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_addr.s_addr = INADDR_ANY;
+	serverAddr.sin_port = htons(port);
+
+	// Bind the socket to the specified port
+	if (bind(lsocket, (const sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+		std::cerr << "Error binding socket" << std::endl;
+		closesocket(lsocket);
+		WSACleanup();
+		return 1;
+	}
+
+	std::cout << "UDP server listening on port " << port << std::endl;
+	return 0;
+}
+
+/***
+
+Constructors & Destructors
+
+***/
+
+EASportsWRC::EASportsWRC(std::string serverIP_l, int port_update, int port_resume, int port_pause, int port_end, int port_start)
+{
+	SERVER_IP_s = serverIP_l;	
+
+	SOCKET serverSocketUpdate_sk, serverSocketResume_sk, serverSocketPause_sk, serverSocketEnd_sk, serverSocketStart_sk;
+	//EAConnections_s[0].connectionSocket = serverSocketUpdate_sk;
+	EAConnections_s[0].port = port_update;
+	//EAConnections_s[1].connectionSocket = serverSocketResume_sk;
+	EAConnections_s[1].port = port_resume;
+	//EAConnections_s[2].connectionSocket = serverSocketPause_sk;
+	EAConnections_s[2].port = port_pause;
+	//EAConnections_s[3].connectionSocket = serverSocketEnd_sk;
+	EAConnections_s[3].port = port_end;
+	//EAConnections_s[4].connectionSocket = serverSocketStart_sk;
+	EAConnections_s[4].port = port_start;
+}
+
 EASportsWRC::~EASportsWRC()
 {
-	closesocket(serverSocket);
+	for (auto& i : EAConnections_s)
+	{
+		closesocket(i.connectionSocket);
+	}
 	WSACleanup();
 	isRunning_b = false;
 	if (m_NetworkThread.joinable())
