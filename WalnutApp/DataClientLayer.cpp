@@ -486,8 +486,8 @@ void DataClientLayer::ShiftLight()
 	static ScrollingBuffer PosX, PosY, PosZ, PosXZ;
 	float current_time = 0;
 	static bool isOpen;
-
-	ImGui::Begin("Shift Lights", &m_ShowShiftLight);
+	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoResize |   ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking;
+	ImGui::Begin("Shift Lights", &m_ShowShiftLight, window_flags);
 
 	/********************************************************************************************/
 	/*																							*/
