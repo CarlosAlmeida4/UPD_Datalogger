@@ -88,6 +88,9 @@ struct EAtelemetry_data_t {
 	
 	int gear;
 	
+	float shiftlightFraction;
+	float shiftlightStart;
+	float shiftlightEnd;
 	float VehSpeed;
 	float VehTransSpeed;
 	float VehPosX;
@@ -146,6 +149,9 @@ struct EAtelemetry_data_t {
 struct EAtelemetry_data_Vector_t {
 	EAtelemetrybyte_t gear;
 	
+	EAtelemetryfloat_t shiftlightFraction;
+	EAtelemetryfloat_t shiftlightStart;
+	EAtelemetryfloat_t shiftlightEnd;
 	EAtelemetryfloat_t VehSpeed;
 	EAtelemetryfloat_t VehTransSpeed;
 	EAtelemetryfloat_t VehPosX;

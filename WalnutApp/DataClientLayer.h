@@ -22,6 +22,7 @@ public:
 	void SetDriverInputsStatus(bool setval);
 	void SetMultiSignalPlot(bool setval);
 	void SetPositionPlot(bool setval);
+	void SetShiftLight(bool setval);
 
 private:
 	
@@ -37,6 +38,8 @@ private:
 	void MultiSignalPlot();
 	//Plot vehicle position
 	void VehiclePosition();
+	// Shift light with RPM
+	void ShiftLight();
 
 public:
 
@@ -64,5 +67,6 @@ private:
 	bool m_ShowDriverInputStatus = false;
 	bool m_ShowMultiSignalPlot = false;
 	bool m_ShowPositionPlot = false;
+	bool m_ShowShiftLight = false;
 	
 };
