@@ -77,7 +77,7 @@ void EASportsWRC::HandleArray()
 	
 	data = data_s;
 	convertSeconds2Time();
-	PrintArray();
+	//PrintArray();
 	
 	TelemetryData_v.gear.push_back(data_s.gear);
 	
