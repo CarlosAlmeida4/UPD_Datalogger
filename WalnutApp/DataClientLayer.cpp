@@ -78,6 +78,7 @@ void DataClientLayer::OnUIRender()
 	if (m_ShowMultiSignalPlot) MultiSignalPlot();
 	if(m_ShowDriverInputStatus) DriverInputsStatus();
 	if (m_ShowPositionPlot) VehiclePosition();
+	if (m_ShowShiftLight) ShiftLight();
 	if (!l_EASportsWRC.isRunning_b)
 	{
 		l_EASportsWRC.startClient();
@@ -323,8 +324,8 @@ void DataClientLayer::BrakeData()
 	/*																							*/
 	/********************************************************************************************/
 
-	static const char* xlabels[] = { "L","R"};
-	static const char* ylabels[] = { "F","B"};
+	static const char* xlabels[] = { "Left","Right"};
+	static const char* ylabels[] = { "Front","Back"};
 	static float values[2][2] = { {0,0},
 								{0,0} };
 
@@ -480,6 +481,74 @@ void DataClientLayer::VehiclePosition()
 	ImGui::End();
 }
 
+void DataClientLayer::ShiftLight()
+{
+	static ScrollingBuffer PosX, PosY, PosZ, PosXZ;
+	float current_time = 0;
+	static bool isOpen;
+
+	ImGui::Begin("Shift Lights", &m_ShowShiftLight);
+
+	/********************************************************************************************/
+	/*																							*/
+	/*											Shift HeatMaps									*/
+	/*																							*/
+	/********************************************************************************************/
+
+	static const char* xlabels[] = { " "};
+	static const char* ylabels[] = { " "};
+	static float values = 0;
+	static float scale_min = 0;
+	static float scale_max = 5000;
+	static ImPlotColormap map = ImPlotColormap_Jet;
+	
+	if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.rpm.size() != 0)// only need to check size of one
+	{
+		values = l_EASportsWRC.TelemetryData_v.rpm.back();
+		//Black when not in range
+		if (l_EASportsWRC.TelemetryData_v.rpm.back() < ((2 * l_EASportsWRC.TelemetryData_v.shiftlightStart.back()) - l_EASportsWRC.TelemetryData_v.shiftlightEnd.back()))
+		{
+			map = ImPlotColormap_Greys;
+			scale_min = -5000;
+			scale_max = 0;
+		}
+		//its in range
+		else if (l_EASportsWRC.TelemetryData_v.rpm.back() >= ((2 * l_EASportsWRC.TelemetryData_v.shiftlightStart.back()) - l_EASportsWRC.TelemetryData_v.shiftlightEnd.back()))
+		{
+			map = ImPlotColormap_Jet;
+			scale_max = l_EASportsWRC.TelemetryData_v.shiftlightEnd.back();
+			scale_min = (1.8 * l_EASportsWRC.TelemetryData_v.shiftlightStart.back()) - scale_max;
+		}
+		//show blue when in regen (only for rally 1)
+		//TODO: check if regen only really hits with 50% brake pressure (still prototype
+		//if (0 == l_EASportsWRC.TelemetryData_v.throttle.back() && l_EASportsWRC.TelemetryData_v.brake.back() >= 0.5)
+		//{
+		//	//Regan is active, show blue
+		//	map = ImPlotColormap_Jet;
+		//	scale_min = l_EASportsWRC.TelemetryData_v.max_rpm.back();
+		//	scale_max = l_EASportsWRC.TelemetryData_v.max_rpm.back();
+		//}
+	}
+
+
+	static ImPlotHeatmapFlags hm_flags = 0;
+	static ImPlotAxisFlags axes_flags = ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoLabel;
+	ImPlot::BustColorCache("##Heatmap1");
+	ImPlot::PushColormap(map);
+
+	if (ImPlot::BeginPlot("##Heatmap1", ImVec2(225, 225), ImPlotFlags_NoLegend | ImPlotFlags_NoMouseText)) {
+		//ImPlot::PushColormap(map);
+		ImPlot::SetupAxes(NULL, NULL, axes_flags, axes_flags);
+		ImPlot::PlotHeatmap("heat", &values, 1, 1, scale_min, scale_max, "%g", ImPlotPoint(0, 0), ImPlotPoint(1, 1), hm_flags);
+		ImPlot::EndPlot();
+	}
+	ImGui::SameLine();
+	ImPlot::PopColormap();
+
+	ImGui::End();
+}
+
+
 /***
 
 Getters Setters
@@ -504,4 +573,9 @@ void DataClientLayer::SetMultiSignalPlot(bool setval)
 void DataClientLayer::SetPositionPlot(bool setval)
 {
 	m_ShowPositionPlot = setval;
+}
+
+void DataClientLayer::SetShiftLight(bool setval)
+{
+	m_ShowShiftLight = setval;
 }

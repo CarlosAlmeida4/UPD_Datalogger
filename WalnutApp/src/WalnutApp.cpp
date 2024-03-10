@@ -44,12 +44,17 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 			{
 				dataclientlayer->SetDriverInputsStatus(true);
 			}
+			if (ImGui::MenuItem("Shift Light"))
+			{
+				dataclientlayer->SetShiftLight(true);
+			}
 			if (ImGui::MenuItem("Reset Windows"))
 			{
 				dataclientlayer->SetShowBrakeData(false);
 				dataclientlayer->SetDriverInputsStatus(false);
 				dataclientlayer->SetMultiSignalPlot(false);
 				dataclientlayer->SetPositionPlot(false);
+				dataclientlayer->SetShiftLight(false);
 			}
 			ImGui::EndMenu();
 		}

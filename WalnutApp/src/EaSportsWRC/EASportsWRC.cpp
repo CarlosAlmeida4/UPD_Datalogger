@@ -21,6 +21,9 @@ void EASportsWRC::HandleArray()
 	EAtelemetry_data_t data_s;
 	data_s.gear = (int)bUnpackArray(EAoffset_t::vehicle_gear_index);
 	
+	data_s.shiftlightFraction = UnpackArray(EAoffset_t::shiftlights_fraction);
+	data_s.shiftlightStart = UnpackArray(EAoffset_t::shiftlights_rpm_start);
+	data_s.shiftlightEnd = UnpackArray(EAoffset_t::shiftlights_rpm_end);
 	data_s.VehSpeed = UnpackArray(EAoffset_t::vehicle_speed);
 	data_s.VehTransSpeed = UnpackArray(EAoffset_t::vehicle_transmission_speed);
 	data_s.VehPosX = UnpackArray(EAoffset_t::vehicle_position_x);
@@ -74,10 +77,13 @@ void EASportsWRC::HandleArray()
 	
 	data = data_s;
 	convertSeconds2Time();
-	//PrintArray();
+	PrintArray();
 	
 	TelemetryData_v.gear.push_back(data_s.gear);
 	
+	TelemetryData_v.shiftlightFraction.push_back(data_s.shiftlightFraction);
+	TelemetryData_v.shiftlightStart.push_back(data_s.shiftlightStart);
+	TelemetryData_v.shiftlightEnd.push_back(data_s.shiftlightEnd);
 	TelemetryData_v.VehSpeed.push_back(data_s.VehSpeed);
 	TelemetryData_v.VehTransSpeed.push_back(data_s.VehTransSpeed);
 	TelemetryData_v.VehPosX.push_back(data_s.VehPosX);
@@ -427,6 +433,9 @@ void EASportsWRC::PrintArray()
 	//std::cout << "stage_current_time: " << data.current_time << "\n" << std::flush;
 	//std::cout << "stage_current_distance: " << data.lap_distance << "\n" << std::flush;
 	//std::cout << "stage_length: " << data.track_length << "\n" << std::flush;
+	//std::cout << "shift fraction: " << data.shiftlightFraction<< "\n" << std::flush;
+	std::cout << "shift start: " << data.shiftlightStart<< "\n" << std::flush;
+	std::cout << "shift end: " << data.shiftlightEnd<< "\n" << std::flush;
 
 }
 
