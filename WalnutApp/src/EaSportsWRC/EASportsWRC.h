@@ -206,6 +206,13 @@ struct EAtelemetry_data_Vector_t {
 	EAtelemetrydouble_t lap_distance;
 };
 
+struct EAtelemetryMap_t
+{
+	EAtelemetryfloatMap_t EAtelemetryfloatMap;
+	EAtelemetrydoubleMap_t EAtelemetrydoubleMap;
+	EAtelemetrybyteMap_t EAtelemetrybyteMap;
+};
+
 //Configurable circular buffer max size
 static const size_t CircularBufferMaxSize = 1;
 
@@ -228,7 +235,8 @@ class EASportsWRC
 			std::array<EAtelemetry_data_t, CircularBufferMaxSize> circularBuffer;
 		}EAcircularBuff_s;
 		bool OnStage_b = false;
-		
+		EAtelemetryMap_t m_EAtelemetryMap;
+
 
 	public:
 		EASportsWRC(std::string serverIP_l, int port_l) : SERVER_IP_s(serverIP_l), PORT_i(port_l) {}
@@ -252,6 +260,7 @@ class EASportsWRC
 		void convertSeconds2Time();
 		void AddtoCircularBuf(EAtelemetry_data_t data_s);
 		void HandleArray();
+		void GenerateMap();
 
 };
 
