@@ -40,6 +40,8 @@ private:
 	void VehiclePosition();
 	// Shift light with RPM
 	void ShiftLight();
+	// Load stored Run TODO
+	void LoadRunModal();
 
 public:
 
@@ -68,5 +70,5 @@ private:
 	bool m_ShowMultiSignalPlot = false;
 	bool m_ShowPositionPlot = false;
 	bool m_ShowShiftLight = false;
-	
+	bool m_LoadRunModal = false;
 };

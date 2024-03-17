@@ -394,63 +394,65 @@ void EASportsWRC::ClearArray()
 void EASportsWRC::GenerateMap()
 {
 	EAtelemetryMap_t l_EAtelemetryMap;
+	if (!TelemetryData_v.gear.empty())
+	{
+		l_EAtelemetryMap.EAtelemetrybyteMap["Gear"] = TelemetryData_v.gear;
+		l_EAtelemetryMap.EAtelemetryfloatMap["shiftLightFraction"] = TelemetryData_v.shiftlightFraction;
+		l_EAtelemetryMap.EAtelemetryfloatMap["shiftLightStart"] = TelemetryData_v.shiftlightStart;
+		l_EAtelemetryMap.EAtelemetryfloatMap["shiftLightEnd"] = TelemetryData_v.shiftlightEnd;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Speed"] = TelemetryData_v.VehSpeed;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Trans Speed"] = TelemetryData_v.VehTransSpeed;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Position X"] = TelemetryData_v.VehPosX;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Position Y"] = TelemetryData_v.VehPosY;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Position Z"] = TelemetryData_v.VehPosZ;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Speed X"] = TelemetryData_v.VehSpdX;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Speed Y"] = TelemetryData_v.VehSpdY;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Speed Z"] = TelemetryData_v.VehSpdZ;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Accel X"] = TelemetryData_v.VehAccelX;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Accel Y"] = TelemetryData_v.VehAccelY;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Accel Z"] = TelemetryData_v.VehAccelZ;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Left Dir X"] = TelemetryData_v.VehLeftDirX;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Left Dir Y"] = TelemetryData_v.VehLeftDirY;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Left Dir Z"] = TelemetryData_v.VehLeftDirZ;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Fwrd Dir X"] = TelemetryData_v.VehFwrdDirX;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Fwrd Dir Y"] = TelemetryData_v.VehFwrdDirY;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Fwrd Dir Z"] = TelemetryData_v.VehFwrdDirZ;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Up Dir X"] = TelemetryData_v.VehUpDirX;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Up Dir Y"] = TelemetryData_v.VehUpDirY;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Up Dir Z"] = TelemetryData_v.VehUpDirZ;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Position BL"] = TelemetryData_v.HubVertPosBL;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Position BR"] = TelemetryData_v.HubVertPosBR;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Position FL"] = TelemetryData_v.HubVertPosFL;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Position FR"] = TelemetryData_v.HubVertPosFR;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Velocity BL"] = TelemetryData_v.HubVertSpdBL;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Velocity BR"] = TelemetryData_v.HubVertSpdBR;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Velocity FL"] = TelemetryData_v.HubVertSpdFL;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Velocity FR"] = TelemetryData_v.HubVertSpdFR;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Wheel Speed BL"] = TelemetryData_v.WheelSpeedBL;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Wheel Speed BR"] = TelemetryData_v.WheelSpeedBR;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Wheel Speed FL"] = TelemetryData_v.WheelSpeedFL;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Wheel Speed FR"] = TelemetryData_v.WheelSpeedFR;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Stear"] = TelemetryData_v.stear;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Clutch"] = TelemetryData_v.clutch;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Brake"] = TelemetryData_v.brake;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Throttle"] = TelemetryData_v.throttle;
+		l_EAtelemetryMap.EAtelemetryfloatMap["RPM"] = TelemetryData_v.rpm;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Handbrake"] = TelemetryData_v.handbrake;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Current time"] = TelemetryData_v.current_time;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Current minutes"] = TelemetryData_v.current_minutes;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Current seconds"] = TelemetryData_v.current_seconds;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Game total time"] = TelemetryData_v.game_total_time;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Game delta time"] = TelemetryData_v.game_delta_time;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Brake Temp BR"] = TelemetryData_v.brake_temp_br;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Brake Temp FL"] = TelemetryData_v.brake_temp_fl;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Brake Temp FR"] = TelemetryData_v.brake_temp_fr;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Brake Temp BL"] = TelemetryData_v.brake_temp_bl;
 
-	l_EAtelemetryMap.EAtelemetrybyteMap["Gear"] = TelemetryData_v.gear;
-	l_EAtelemetryMap.EAtelemetryfloatMap["shiftLightFraction"] = TelemetryData_v.shiftlightFraction;
-	l_EAtelemetryMap.EAtelemetryfloatMap["shiftLightStart"] = TelemetryData_v.shiftlightStart;
-	l_EAtelemetryMap.EAtelemetryfloatMap["shiftLightEnd"] = TelemetryData_v.shiftlightEnd;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Speed"] = TelemetryData_v.VehSpeed;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Trans Speed"] = TelemetryData_v.VehTransSpeed;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Position X"] = TelemetryData_v.VehPosX;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Position Y"] = TelemetryData_v.VehPosY;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Position Z"] = TelemetryData_v.VehPosZ;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Speed X"] = TelemetryData_v.VehSpdX;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Speed Y"] = TelemetryData_v.VehSpdY;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Speed Z"] = TelemetryData_v.VehSpdZ;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Accel X"] = TelemetryData_v.VehAccelX;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Accel Y"] = TelemetryData_v.VehAccelY;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Accel Z"] = TelemetryData_v.VehAccelZ;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Left Dir X"] = TelemetryData_v.VehLeftDirX;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Left Dir Y"] = TelemetryData_v.VehLeftDirY;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Left Dir Z"] = TelemetryData_v.VehLeftDirZ;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Fwrd Dir X"] = TelemetryData_v.VehFwrdDirX;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Fwrd Dir Y"] = TelemetryData_v.VehFwrdDirY;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Fwrd Dir Z"] = TelemetryData_v.VehFwrdDirZ;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Up Dir X"] = TelemetryData_v.VehUpDirX;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Up Dir Y"] = TelemetryData_v.VehUpDirY;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Up Dir Z"] = TelemetryData_v.VehUpDirZ;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Position BL"] = TelemetryData_v.HubVertPosBL;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Position BR"] = TelemetryData_v.HubVertPosBR;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Position FL"] = TelemetryData_v.HubVertPosFL;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Position FR"] = TelemetryData_v.HubVertPosFR;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Velocity BL"] = TelemetryData_v.HubVertSpdBL;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Velocity BR"] = TelemetryData_v.HubVertSpdBR;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Velocity FL"] = TelemetryData_v.HubVertSpdFL;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Velocity FR"] = TelemetryData_v.HubVertSpdFR;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Wheel Speed BL"] = TelemetryData_v.WheelSpeedBL;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Wheel Speed BR"] = TelemetryData_v.WheelSpeedBR;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Wheel Speed FL"] = TelemetryData_v.WheelSpeedFL;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Wheel Speed FR"] = TelemetryData_v.WheelSpeedFR;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Stear"] = TelemetryData_v.stear;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Clutch"] = TelemetryData_v.clutch;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Brake"] = TelemetryData_v.brake;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Throttle"] = TelemetryData_v.throttle;
-	l_EAtelemetryMap.EAtelemetryfloatMap["RPM"] = TelemetryData_v.rpm;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Handbrake"] = TelemetryData_v.handbrake;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Current time"] = TelemetryData_v.current_time;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Current minutes"] = TelemetryData_v.current_minutes;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Current seconds"] = TelemetryData_v.current_seconds;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Game total time"] = TelemetryData_v.game_total_time;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Game delta time"] = TelemetryData_v.game_delta_time;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Brake Temp BR"] = TelemetryData_v.brake_temp_br;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Brake Temp FL"] = TelemetryData_v.brake_temp_fl;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Brake Temp FR"] = TelemetryData_v.brake_temp_fr;
-	l_EAtelemetryMap.EAtelemetryfloatMap["Brake Temp BL"] = TelemetryData_v.brake_temp_bl;
-	
-	l_EAtelemetryMap.EAtelemetrydoubleMap["Track Length"] = TelemetryData_v.track_length;
-	l_EAtelemetryMap.EAtelemetrydoubleMap["Lap distance"] = TelemetryData_v.lap_distance;
+		l_EAtelemetryMap.EAtelemetrydoubleMap["Track Length"] = TelemetryData_v.track_length;
+		l_EAtelemetryMap.EAtelemetrydoubleMap["Lap distance"] = TelemetryData_v.lap_distance;
 
-	m_EAtelemetryMap = l_EAtelemetryMap;
+		m_EAtelemetryMap = l_EAtelemetryMap;
+	}
 }
 
 /***
