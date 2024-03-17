@@ -254,13 +254,13 @@ class EASportsWRC
 		int startClient();
 		void stopClient();
 		void receiveData();
+		bool GenerateMap();
 
 	private:
 		void PrintArray();
 		void convertSeconds2Time();
 		void AddtoCircularBuf(EAtelemetry_data_t data_s);
 		void HandleArray();
-		void GenerateMap();
 
 };
 

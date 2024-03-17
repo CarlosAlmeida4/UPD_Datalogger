@@ -391,7 +391,7 @@ void EASportsWRC::ClearArray()
 	TelemetryData_v.lap_distance.clear();
 }
 
-void EASportsWRC::GenerateMap()
+bool EASportsWRC::GenerateMap()
 {
 	EAtelemetryMap_t l_EAtelemetryMap;
 	if (!TelemetryData_v.gear.empty())
@@ -452,7 +452,9 @@ void EASportsWRC::GenerateMap()
 		l_EAtelemetryMap.EAtelemetrydoubleMap["Lap distance"] = TelemetryData_v.lap_distance;
 
 		m_EAtelemetryMap = l_EAtelemetryMap;
+		return true;
 	}
+	return false;
 }
 
 /***
