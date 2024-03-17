@@ -284,6 +284,26 @@ void DataClientLayer::MultiSignalPlot()
 
 	static bool show_rows_cols = false;
 	
+	/*
+		Workflow:
+		1. load map in EAsportsWRC class, if no current data, ask for file with popup window
+		2. If load from file, the popup will call a different method from EASportsWRC class (GenerateMapFromYAML)
+	*/
+	if (l_EASportsWRC.GenerateMap())
+	{
+		//using current data
+	}
+	else
+	{
+		//start popup
+		ImGui::OpenPopup("Load Run");
+		// Always center this window when appearing
+		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+	}
+	m_LoadRunModalOpen = ImGui::BeginPopupModal("Load Run", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+	if (m_LoadRunModalOpen) { LoadRunModal(); }
+
 
 	if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1, 400), flags)) 
 	{
@@ -480,7 +500,6 @@ void DataClientLayer::ShiftLight()
 	ImGui::End();
 }
 
-
 void DataClientLayer::StoreRunModal()
 {
 	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
@@ -571,6 +590,97 @@ void DataClientLayer::StoreRunModal()
 
 	ImGui::EndPopup();
 
+}
+
+void DataClientLayer::LoadRunModal()
+{
+	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
+		COINIT_DISABLE_OLE1DDE);
+	static bool isPathEmpty = false;
+
+	ImGui::Text("Storage location");
+	ImGui::InputText("##Storage", &m_StoragePath);
+	ImGui::SameLine();
+
+	if (ImGui::Button("Select"))
+	{
+		if (SUCCEEDED(hr))
+		{
+			IFileOpenDialog* pFileOpen;
+
+			// Create the FileOpenDialog object.
+			hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+				IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+
+			DWORD dwOptions;
+			if (SUCCEEDED(pFileOpen->GetOptions(&dwOptions)))
+			{
+				pFileOpen->SetOptions(dwOptions | FOS_PICKFOLDERS);
+			}
+
+			if (SUCCEEDED(hr))
+			{
+				// Show the Open dialog box.
+				hr = pFileOpen->Show(NULL);
+
+				// Get the file name from the dialog box.
+				if (SUCCEEDED(hr))
+				{
+					IShellItem* pItem;
+					hr = pFileOpen->GetResult(&pItem);
+					if (SUCCEEDED(hr))
+					{
+						PWSTR pszFilePath;
+						hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+
+						// Display the file name to the user.
+						if (SUCCEEDED(hr))
+						{
+							std::wstring wss = pszFilePath;
+							std::string sss(wss.begin(), wss.end());
+							m_StoragePath = sss;
+							CoTaskMemFree(pszFilePath);
+						}
+						pItem->Release();
+					}
+				}
+				pFileOpen->Release();
+			}
+			CoUninitialize();
+		}
+
+	}
+
+	ImGui::Text("File name");
+	ImGui::InputText("##file", &m_StorageFileName);
+
+	ImGui::Separator();
+
+	if (isPathEmpty)
+	{
+		ImGui::Text("Please select a folder and insert a file name");
+	}
+
+	if (ImGui::Button("Save"))
+	{
+		if (0 == m_StorageFileName.size() || 0 == m_StoragePath.size())
+		{
+			isPathEmpty = true;
+		}
+		else
+		{
+			isPathEmpty = false;
+			std::string l_SCompletePath = m_StoragePath + "\\" + m_StorageFileName + ".yaml";
+			std::filesystem::path l_CompletePath = l_SCompletePath;
+			l_EASportsWRC.StoreVector(l_CompletePath);
+			ImGui::CloseCurrentPopup();
+		}
+	}
+
+	ImGui::SameLine();
+	if (ImGui::Button("Cancel")) { ImGui::CloseCurrentPopup(); }
+
+	ImGui::EndPopup();
 }
 
 /***

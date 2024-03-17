@@ -61,6 +61,7 @@ private:
 	uint32_t m_Color = 0xffffffff;
 
 	bool m_StoreRunModalOpen = false;
+	bool m_LoadRunModalOpen = false;
 	bool m_ShowSuccessfulConnectionMessage = false;
 	std::string m_StoragePath;
 	std::string m_StorageFileName;
