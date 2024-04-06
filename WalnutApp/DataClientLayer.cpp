@@ -597,6 +597,7 @@ void DataClientLayer::LoadRunModal()
 	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
 		COINIT_DISABLE_OLE1DDE);
 	static bool isPathEmpty = false;
+	static std::filesystem::path lPath;
 
 	ImGui::Text("Storage location");
 	ImGui::InputText("##Storage", &m_StoragePath);
@@ -642,6 +643,7 @@ void DataClientLayer::LoadRunModal()
 							std::filesystem::path path(m_StoragePath);
 							m_StorageFileName = path.filename().string(); // "file"
 							m_StoragePath = path.parent_path().string(); // "/home/dir1/dir2/dir3/dir4"
+							lPath = path;
 							CoTaskMemFree(pszFilePath);
 						}
 						pItem->Release();
@@ -653,7 +655,7 @@ void DataClientLayer::LoadRunModal()
 		}
 
 	}
-	
+
 	ImGui::Text("File name");
 	ImGui::InputText("##file", &m_StorageFileName);
 
@@ -666,22 +668,13 @@ void DataClientLayer::LoadRunModal()
 
 	if (ImGui::Button("Load"))
 	{
-		//if (0 == m_StorageFileName.size() || 0 == m_StoragePath.size())
-		//{
-		//	isPathEmpty = true;
-		//}
-		//else
-		//{
-		//	isPathEmpty = false;
-		//	std::string l_SCompletePath = m_StoragePath + "\\" + m_StorageFileName + ".yaml";
-		//	std::filesystem::path l_CompletePath = l_SCompletePath;
-		//	l_EASportsWRC.StoreVector(l_CompletePath);
-		//	ImGui::CloseCurrentPopup();
-		//}
+		l_EASportsWRC.GenerateMapFromYAML(lPath);
+		ImGui::CloseCurrentPopup();
+
 	}
 
 	ImGui::SameLine();
-	if (ImGui::Button("Cancel")) { ImGui::CloseCurrentPopup(); m_LoadRunModalOpen = false; }
+	if (ImGui::Button("Cancel")) { ImGui::CloseCurrentPopup();}
 
 	ImGui::EndPopup();
 }

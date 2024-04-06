@@ -457,6 +457,16 @@ bool EASportsWRC::GenerateMap()
 	return false;
 }
 
+void EASportsWRC::GenerateMapFromYAML(const std::filesystem::path& filepath)
+{
+	std::cout << filepath << std::endl;
+	YAML::Node TelemetryYAML = YAML::LoadFile(filepath.string());
+	for (int i = 0; i <= 100; i++)
+	{
+		//do nothing
+	}
+}
+
 /***
 
 Stage Handlers
