@@ -459,12 +459,41 @@ bool EASportsWRC::GenerateMap()
 
 void EASportsWRC::GenerateMapFromYAML(const std::filesystem::path& filepath)
 {
-	std::cout << filepath << std::endl;
 	YAML::Node TelemetryYAML = YAML::LoadFile(filepath.string());
-	for (int i = 0; i <= 100; i++)
-	{
-		//do nothing
+	
+	EAtelemetryMap_t l_EAtelemetryMap;
+	//std::cout << TelemetryYAML.IsSequence() << std::endl;
+	//std::cout << TelemetryYAML.IsMap() << std::endl;
+	//std::cout << TelemetryYAML.IsScalar() << std::endl;
+	//std::cout << TelemetryYAML.IsDefined() << std::endl;
+	//std::cout << TelemetryYAML.IsNull() << std::endl;
+	//for (auto it = TelemetryYAML.begin(); it != TelemetryYAML.end(); it++)
+	//{
+	//	YAML::Node response_values_map = it->as<YAML::Node>();
+	//	//std::cout << response_values_map << std::endl;
+	//}
+	for (const auto& kv : TelemetryYAML) {
+		std::cout << kv.first.as<std::string>() << "\n"; // prints Foo
+		//std::cout << kv.second.as<std::vector>() << "\n"; // prints Foo
+		//const YAML::Node& KeyNode = kv.second;  // the value
+		std::string key = kv.first.as<std::string>();
+		if (key == "Gear")
+		{
+			l_EAtelemetryMap.EAtelemetrybyteMap[key] = kv.second.as<std::vector<int>>();
+
+		}
+		else if (key == "Track Length" || key == "Lap distance")
+		{
+			l_EAtelemetryMap.EAtelemetrydoubleMap[key] = kv.second.as<std::vector<double>>();
+		}
+		else
+		{
+			l_EAtelemetryMap.EAtelemetryfloatMap[key] = kv.second.as<std::vector<float>>();
+		}
+
 	}
+	m_EAtelemetryMap = l_EAtelemetryMap;
+	
 }
 
 /***
@@ -517,6 +546,11 @@ void EASportsWRC::PrintArray()
 	std::cout << "shift start: " << data.shiftlightStart<< "\n" << std::flush;
 	std::cout << "shift end: " << data.shiftlightEnd<< "\n" << std::flush;
 
+}
+
+bool EASportsWRC::GetisReadingFromFile()
+{
+	return isReadingFromFile_b;
 }
 
 /***
@@ -624,6 +658,12 @@ void EASportsWRC::receiveData()
 	}
 
 }
+
+/***
+
+Destructuor
+
+***/
 
 EASportsWRC::~EASportsWRC()
 {

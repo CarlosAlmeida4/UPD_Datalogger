@@ -229,6 +229,8 @@ class EASportsWRC
 		SOCKET serverSocket;
 		std::thread m_NetworkThread;
 		bool isRunning_b = false;
+		
+
 	private:
 		struct EAcircularBuff_t {
 			uint8_t currentIndex = 0;
@@ -236,7 +238,7 @@ class EASportsWRC
 		}EAcircularBuff_s;
 		bool OnStage_b = false;
 		EAtelemetryMap_t m_EAtelemetryMap;
-
+		bool isReadingFromFile_b = false;
 
 	public:
 		EASportsWRC(std::string serverIP_l, int port_l) : SERVER_IP_s(serverIP_l), PORT_i(port_l) {}
@@ -256,6 +258,7 @@ class EASportsWRC
 		void receiveData();
 		bool GenerateMap();
 		void GenerateMapFromYAML(const std::filesystem::path& filepath);
+		bool GetisReadingFromFile();
 
 	private:
 		void PrintArray();
