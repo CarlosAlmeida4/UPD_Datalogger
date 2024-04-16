@@ -459,6 +459,7 @@ bool EASportsWRC::GenerateMap()
 
 void EASportsWRC::GenerateMapFromYAML(const std::filesystem::path& filepath)
 {
+	isReadFromFile_b = true;
 	YAML::Node TelemetryYAML = YAML::LoadFile(filepath.string());
 	
 	EAtelemetryMap_t l_EAtelemetryMap;
@@ -493,7 +494,6 @@ void EASportsWRC::GenerateMapFromYAML(const std::filesystem::path& filepath)
 
 	}
 	m_EAtelemetryMap = l_EAtelemetryMap;
-	
 }
 
 /***
@@ -548,9 +548,9 @@ void EASportsWRC::PrintArray()
 
 }
 
-bool EASportsWRC::GetisReadingFromFile()
+bool EASportsWRC::GetisReadFromFile()
 {
-	return isReadingFromFile_b;
+	return isReadFromFile_b;
 }
 
 /***

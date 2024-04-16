@@ -229,6 +229,7 @@ class EASportsWRC
 		SOCKET serverSocket;
 		std::thread m_NetworkThread;
 		bool isRunning_b = false;
+		EAtelemetryMap_t m_EAtelemetryMap;
 		
 
 	private:
@@ -237,8 +238,7 @@ class EASportsWRC
 			std::array<EAtelemetry_data_t, CircularBufferMaxSize> circularBuffer;
 		}EAcircularBuff_s;
 		bool OnStage_b = false;
-		EAtelemetryMap_t m_EAtelemetryMap;
-		bool isReadingFromFile_b = false;
+		bool isReadFromFile_b = false;
 
 	public:
 		EASportsWRC(std::string serverIP_l, int port_l) : SERVER_IP_s(serverIP_l), PORT_i(port_l) {}
@@ -258,7 +258,7 @@ class EASportsWRC
 		void receiveData();
 		bool GenerateMap();
 		void GenerateMapFromYAML(const std::filesystem::path& filepath);
-		bool GetisReadingFromFile();
+		bool GetisReadFromFile();
 
 	private:
 		void PrintArray();
