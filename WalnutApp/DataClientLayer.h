@@ -71,5 +71,5 @@ private:
 	bool m_ShowMultiSignalPlot = false;
 	bool m_ShowPositionPlot = false;
 	bool m_ShowShiftLight = false;
-	bool m_LoadRunModal = false;
+	bool m_LoadRunModalRequest = false;
 };

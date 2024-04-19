@@ -281,30 +281,24 @@ void DataClientLayer::MultiSignalPlot()
 	static int cols = 4;
 	static int id[] = { 0,1,2,3,4,5 };
 	static int curj = -1;
-
-	static bool show_rows_cols = false;
 	
+	static bool show_rows_cols = false;
+
 	/*
-		Workflow:
-		1. load map in EAsportsWRC class, if no current data, ask for file with popup window
-		2. If load from file, the popup will call a different method from EASportsWRC class (GenerateMapFromYAML)
+	Workflow:
+	1. load map in EAsportsWRC class, if no current data, ask for file with popup window
+	2. If load from file, the popup will call a different method from EASportsWRC class (GenerateMapFromYAML)
 	*/
 	if (l_EASportsWRC.GenerateMap())
 	{
 		//using current data
 	}
-	else
+
+	if (!l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap.empty())
 	{
-		//start popup
-		ImGui::OpenPopup("Load Run");
-		// Always center this window when appearing
-		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+	
 	}
-	m_LoadRunModalOpen = ImGui::BeginPopupModal("Load Run", NULL, ImGuiWindowFlags_AlwaysAutoResize);
-	if (m_LoadRunModalOpen) { LoadRunModal(); }
-
-
+	
 	if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1, 400), flags)) 
 	{
 		for (int i = 0; i < rows * cols; ++i) {
@@ -335,13 +329,13 @@ void DataClientLayer::MultiSignalPlot()
 		}
 		ImPlot::EndSubplots();
 	}
-
+	
 	/*Menu for changing amount of plots*/
 	ImGui::Begin("Signal Plots", &m_ShowMultiSignalPlot, ImGuiWindowFlags_MenuBar);
 	if (ImGui::BeginMenuBar()) {
 		if (ImGui::BeginMenu("Config")) {
 			ImGui::MenuItem("Change Row/Columns", NULL, &show_rows_cols);
-			ImGui::MenuItem("Load", NULL, &m_LoadRunModal);
+			ImGui::MenuItem("Load", NULL, &m_LoadRunModalRequest);
 			ImGui::EndMenu();
 		}
 		ImGui::EndMenuBar();
@@ -349,7 +343,7 @@ void DataClientLayer::MultiSignalPlot()
 	if (show_rows_cols)
 	{
 		ImGui::Begin("Configure Rows & Columns", &show_rows_cols);
-
+	
 		ImGui::InputInt("Rows", &rows);
 		ImGui::InputInt("Columns", &cols);
 		if (ImGui::Button("Done"))
@@ -357,6 +351,18 @@ void DataClientLayer::MultiSignalPlot()
 			show_rows_cols = false;
 		}
 		ImGui::End();
+	}
+	else if (m_LoadRunModalRequest)
+	{
+		//start popup
+		ImGui::OpenPopup("Load Run");
+		// Always center this window when appearing
+		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+	
+		m_LoadRunModalOpen = ImGui::BeginPopupModal("Load Run", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+		if (m_LoadRunModalOpen) { LoadRunModal(); }
+		
 	}
 
 	ImGui::End();
@@ -670,11 +676,15 @@ void DataClientLayer::LoadRunModal()
 	{
 		l_EASportsWRC.GenerateMapFromYAML(lPath);
 		ImGui::CloseCurrentPopup();
-
+		m_LoadRunModalRequest = false;
 	}
 
 	ImGui::SameLine();
-	if (ImGui::Button("Cancel")) { ImGui::CloseCurrentPopup();}
+	if (ImGui::Button("Cancel")) 
+	{ 
+		ImGui::CloseCurrentPopup();
+		m_LoadRunModalRequest = false;
+	}
 
 	ImGui::EndPopup();
 }
@@ -685,27 +695,12 @@ Getters Setters
 
 ***/
 
-void DataClientLayer::SetShowBrakeData(bool setval)
-{
-	m_ShowBrakeData = setval;
-}
+void DataClientLayer::SetShowBrakeData(bool setval){m_ShowBrakeData = setval;}
 
-void DataClientLayer::SetDriverInputsStatus(bool setval)
-{
-	m_ShowDriverInputStatus = setval;
-}
+void DataClientLayer::SetDriverInputsStatus(bool setval){m_ShowDriverInputStatus = setval;}
 
-void DataClientLayer::SetMultiSignalPlot(bool setval)
-{
-	m_ShowMultiSignalPlot = setval;
-}
+void DataClientLayer::SetMultiSignalPlot(bool setval){m_ShowMultiSignalPlot = setval;}
 
-void DataClientLayer::SetPositionPlot(bool setval)
-{
-	m_ShowPositionPlot = setval;
-}
+void DataClientLayer::SetPositionPlot(bool setval){m_ShowPositionPlot = setval;}
 
-void DataClientLayer::SetShiftLight(bool setval)
-{
-	m_ShowShiftLight = setval;
-}
+void DataClientLayer::SetShiftLight(bool setval){m_ShowShiftLight = setval;}
