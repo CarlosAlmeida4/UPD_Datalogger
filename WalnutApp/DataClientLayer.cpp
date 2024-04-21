@@ -298,7 +298,7 @@ void DataClientLayer::MultiSignalPlot()
 	{
 	
 	}
-	
+	ImGui::Begin("Signal Plots", &m_ShowMultiSignalPlot, ImGuiWindowFlags_MenuBar);
 	if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1, 400), flags)) 
 	{
 		for (int i = 0; i < rows * cols; ++i) {
@@ -331,7 +331,7 @@ void DataClientLayer::MultiSignalPlot()
 	}
 	
 	/*Menu for changing amount of plots*/
-	ImGui::Begin("Signal Plots", &m_ShowMultiSignalPlot, ImGuiWindowFlags_MenuBar);
+
 	if (ImGui::BeginMenuBar()) {
 		if (ImGui::BeginMenu("Config")) {
 			ImGui::MenuItem("Change Row/Columns", NULL, &show_rows_cols);
