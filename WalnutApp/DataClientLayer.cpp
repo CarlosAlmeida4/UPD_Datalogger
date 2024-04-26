@@ -274,6 +274,30 @@ ImPlotPoint SinewaveGetter(int i, void* data) {
 	return ImPlotPoint(i, sinf(f * i));
 }
 
+ImPlotPoint MapGetter(int i, void* key) {
+	std::string& lkey = *(static_cast<std::string*>(key));
+	//std::cout << lkey << std::endl;
+
+	ImPlotPoint retPlotPoint;
+	if (l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap.count(lkey) > 0)
+	{
+		EAtelemetrybyte_t localVec = l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap[lkey];
+		retPlotPoint = ImPlotPoint(i, localVec[i]);
+	}
+	if (l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap.count(lkey) > 0)
+	{
+		EAtelemetrydouble_t localVec = l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap[lkey];
+		retPlotPoint = ImPlotPoint(i, localVec[i]);
+	}
+	if (l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap.count(lkey) > 0)
+	{
+		EAtelemetryfloat_t localVec = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap[lkey];
+		retPlotPoint = ImPlotPoint(i, localVec[i]);
+	}
+
+	return retPlotPoint;
+}
+
 void DataClientLayer::MultiSignalPlot()
 {
 	static ImPlotSubplotFlags flags = ImPlotSubplotFlags_ShareItems | ImPlotSubplotFlags_LinkAllX;
@@ -304,24 +328,60 @@ void DataClientLayer::MultiSignalPlot()
 		for (int i = 0; i < rows * cols; ++i) {
 			if (ImPlot::BeginPlot("")) {
 				float fc = 0.01f;
-				ImPlot::PlotLineG("common", SinewaveGetter, &fc, 1000);
-				for (int j = 0; j < 6; ++j) {
-					if (id[j] == i) {
-						char label[8];
-						float fj = 0.01f * (j + 2);
-						sprintf(label, "data%d", j);
-						ImPlot::PlotLineG(label, SinewaveGetter, &fj, 1000);
-						if (ImPlot::BeginDragDropSourceItem(label)) {
-							curj = j;
-							ImGui::SetDragDropPayload("MY_DND", NULL, 0);
-							ImGui::TextUnformatted(label);
-							ImPlot::EndDragDropSource();
-						}
+				//ImPlot::PlotLineG("common", SinewaveGetter, &fc, 1000);
+				for (auto& it : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap)
+				{
+					std::string label = it.first;
+					ImPlot::PlotLineG(label.c_str(), MapGetter, &label, it.second.size());
+					if (ImPlot::BeginDragDropSourceItem(label.c_str()))
+					{
+						//curj = j;
+						ImGui::SetDragDropPayload("MY_DND", NULL, 0);
+						ImGui::TextUnformatted(label.c_str());
+						ImPlot::EndDragDropSource();
 					}
 				}
+				for (auto& it : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap)
+				{
+					std::string label = it.first;
+					ImPlot::PlotLineG(label.c_str(), MapGetter, &label, it.second.size());
+					if (ImPlot::BeginDragDropSourceItem(label.c_str()))
+					{
+						//curj = j;
+						ImGui::SetDragDropPayload("MY_DND", NULL, 0);
+						ImGui::TextUnformatted(label.c_str());
+						ImPlot::EndDragDropSource();
+					}
+				}
+				for (auto& it : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap)
+				{
+					std::string label = it.first;
+					ImPlot::PlotLineG(label.c_str(), MapGetter, &label, it.second.size());
+					if (ImPlot::BeginDragDropSourceItem(label.c_str()))
+					{
+						//curj = j;
+						ImGui::SetDragDropPayload("MY_DND", NULL, 0);
+						ImGui::TextUnformatted(label.c_str());
+						ImPlot::EndDragDropSource();
+					}
+				}
+				//for (int j = 0; j < 6; ++j) {
+				//	if (id[j] == i) {
+				//		char label[8];
+				//		float fj = 0.01f * (j + 2);
+				//		sprintf(label, "data%d", j);
+				//		ImPlot::PlotLineG(label, SinewaveGetter, &fj, 1000);
+				//		if (ImPlot::BeginDragDropSourceItem(label)) {
+				//			curj = j;
+				//			ImGui::SetDragDropPayload("MY_DND", NULL, 0);
+				//			ImGui::TextUnformatted(label);
+				//			ImPlot::EndDragDropSource();
+				//		}
+				//	}
+				//}
 				if (ImPlot::BeginDragDropTargetPlot()) {
 					if (ImGui::AcceptDragDropPayload("MY_DND"))
-						id[curj] = i;
+						//id[curj] = i;
 					ImPlot::EndDragDropTarget();
 				}
 				ImPlot::EndPlot();

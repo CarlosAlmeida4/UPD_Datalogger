@@ -474,7 +474,7 @@ void EASportsWRC::GenerateMapFromYAML(const std::filesystem::path& filepath)
 	//	//std::cout << response_values_map << std::endl;
 	//}
 	for (const auto& kv : TelemetryYAML) {
-		std::cout << kv.first.as<std::string>() << "\n"; // prints Foo
+		//std::cout << kv.first.as<std::string>() << "\n"; // prints Foo
 		//std::cout << kv.second.as<std::vector>() << "\n"; // prints Foo
 		//const YAML::Node& KeyNode = kv.second;  // the value
 		std::string key = kv.first.as<std::string>();
