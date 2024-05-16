@@ -323,16 +323,19 @@ void DataClientLayer::MultiSignalPlot()
 	
 	}
 	ImGui::Begin("Signal Plots", &m_ShowMultiSignalPlot, ImGuiWindowFlags_MenuBar);
+	// child window to serve as initial source for our DND items
+	ImGui::BeginChild("DND_LEFT", ImVec2(100, 400));
+
 	if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1, 400), flags)) 
 	{
 		for (int i = 0; i < rows * cols; ++i) {
 			if (ImPlot::BeginPlot("")) {
 				float fc = 0.01f;
-				//ImPlot::PlotLineG("common", SinewaveGetter, &fc, 1000);
+				ImPlot::PlotLineG("common", SinewaveGetter, &fc, 1000);
 				for (auto& it : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap)
 				{
 					std::string label = it.first;
-					ImPlot::PlotLineG(label.c_str(), MapGetter, &label, it.second.size());
+					//ImPlot::PlotLineG(label.c_str(), MapGetter, &label, it.second.size());
 					if (ImPlot::BeginDragDropSourceItem(label.c_str()))
 					{
 						//curj = j;
@@ -344,7 +347,7 @@ void DataClientLayer::MultiSignalPlot()
 				for (auto& it : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap)
 				{
 					std::string label = it.first;
-					ImPlot::PlotLineG(label.c_str(), MapGetter, &label, it.second.size());
+					//ImPlot::PlotLineG(label.c_str(), MapGetter, &label, it.second.size());
 					if (ImPlot::BeginDragDropSourceItem(label.c_str()))
 					{
 						//curj = j;
@@ -356,7 +359,7 @@ void DataClientLayer::MultiSignalPlot()
 				for (auto& it : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap)
 				{
 					std::string label = it.first;
-					ImPlot::PlotLineG(label.c_str(), MapGetter, &label, it.second.size());
+					//ImPlot::PlotLineG(label.c_str(), MapGetter, &label, it.second.size());
 					if (ImPlot::BeginDragDropSourceItem(label.c_str()))
 					{
 						//curj = j;
@@ -389,6 +392,7 @@ void DataClientLayer::MultiSignalPlot()
 		}
 		ImPlot::EndSubplots();
 	}
+	ImGui::EndChild();
 	
 	/*Menu for changing amount of plots*/
 
