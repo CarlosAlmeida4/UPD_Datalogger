@@ -9,7 +9,7 @@
 #include <string>
 #include <thread>
 
-
+#define EASPORTS_DATA_SIZE 56
 
 /* * * * * Type Definitions * * * * */
 

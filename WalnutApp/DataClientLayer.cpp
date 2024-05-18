@@ -22,8 +22,20 @@
 
 #include <filesystem>
 
+template <typename T>
+inline T RandomRange(T min, T max) {
+	T scale = rand() / (T)RAND_MAX;
+	return min + scale * (max - min);
+}
 
-
+ImVec4 RandomColor() {
+	ImVec4 col;
+	col.x = RandomRange(0.0f, 1.0f);
+	col.y = RandomRange(0.0f, 1.0f);
+	col.z = RandomRange(0.0f, 1.0f);
+	col.w = 1.0f;
+	return col;
+}
 
 // utility structure for realtime plot
 struct ScrollingBuffer {
@@ -308,9 +320,20 @@ void DataClientLayer::MultiSignalPlot()
 	
 	static bool show_rows_cols = false;
 
+	struct MyDndItem {
+		int              Idx;
+		int              Plt;
+		ImAxis           Yax;
+		ImVector<ImVec2> Data;
+		ImVec4           Color;
+		void Reset() { Plt = 0; Yax = ImAxis_Y1; }
+	};
+
+	static MyDndItem dnd[EASPORTS_DATA_SIZE];
+
 	/*
 	Workflow:
-	1. load map in EAsportsWRC class, if no current data, ask for file with popup window
+	1. load map in EAsportsWRC class, if no current data, tell user to load file
 	2. If load from file, the popup will call a different method from EASportsWRC class (GenerateMapFromYAML)
 	*/
 	if (l_EASportsWRC.GenerateMap())
@@ -318,13 +341,36 @@ void DataClientLayer::MultiSignalPlot()
 		//using current data
 	}
 
-	if (!l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap.empty())
-	{
 	
-	}
 	ImGui::Begin("Signal Plots", &m_ShowMultiSignalPlot, ImGuiWindowFlags_MenuBar);
+	
 	// child window to serve as initial source for our DND items
-	ImGui::BeginChild("DND_LEFT", ImVec2(100, 400));
+	ImGui::BeginChild("DND_LEFT", ImVec2(-1, 50));
+
+	if (!l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap.empty())
+	{
+		// Workflow:
+		// fill DnD vector
+		// insert into list
+		static int curr_id = 0;
+		EAtelemetryfloat_t time = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap["Current time"];
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap)
+		{
+			// val is a vector with the data for the specified key
+			// the Data vector is a ImVec2 vector which takes the x (time defined above, and the data from the map file
+			//Since Data is a 2D vector, we need to iterate over it and fill it with the vector members from the map
+			//TODO: create a loop that fills the dnd structure
+			dnd[curr_id].Data
+		}
+		for (auto& it : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap)
+		for (auto& it : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap)
+	}
+	else
+	{
+		ImGui::Text("Load a file or start a run");
+	}
+
+	ImGui::EndChild();
 
 	if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1, 400), flags)) 
 	{
@@ -392,7 +438,7 @@ void DataClientLayer::MultiSignalPlot()
 		}
 		ImPlot::EndSubplots();
 	}
-	ImGui::EndChild();
+
 	
 	/*Menu for changing amount of plots*/
 
