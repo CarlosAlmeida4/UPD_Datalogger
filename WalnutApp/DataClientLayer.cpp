@@ -333,49 +333,33 @@ void DataClientLayer::MultiSignalPlot()
 		//using current data
 	}
 
-	
+	/*------------------------------------------ Begin widgets---------------------------------------------------------------------*/
 	ImGui::Begin("Signal Plots", &m_ShowMultiSignalPlot, ImGuiWindowFlags_MenuBar);
 	
+	/*------------------------------------------ Begin child for DnD gen-----------------------------------------------------------*/
 	// child window to serve as initial source for our DND items
-	ImGui::BeginChild("DND_LEFT", ImVec2(-1, 50));
+	ImGui::BeginChild("DND_LEFT", ImVec2(100, 400));
 
 	if (!l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap.empty())
-	{
-		// Workflow:
-		// fill DnD vector
-		// insert into list
-		// val is a vector with the data for the specified key
-		// the Data vector is a EAtelemetrydouble_t vector which takes the x (time defined above, and the data from the map file
-		// Since Data is a EAtelemetrydouble_t vector, we need to iterate over it and fill it with the vector members from the map
-		// TODO: create a loop that fills the dnd structure
-		
-		static int curr_id = 0;
-		EAtelemetryfloat_t time = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap["Current time"];
-		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap)
-		{
-			dnd[curr_id].Data.resize(val.size()); 
-			dnd[curr_id].Color = RandomColor();
-			dnd[curr_id].SignalName = key;
-			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (double)x; });
-			curr_id++;
+	{	
+		if (ImGui::Button("Reset Data")) {
+			for (int k = 0; k < EASPORTS_DATA_SIZE; ++k)
+				dnd[k].Reset();
+			//dndx = dndy = NULL;
 		}
-		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap)
+		for (int it = 0; it < EASPORTS_DATA_SIZE; it++)
 		{
-			dnd[curr_id].Data.resize(val.size());
-			dnd[curr_id].Color = RandomColor();
-			dnd[curr_id].SignalName = key;
-			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (double)x; });
-			curr_id++;
+			if (dnd[it].Plt > 0)
+				continue;
+			ImPlot::ItemIcon(dnd[it].Color); ImGui::SameLine();
+			ImGui::Selectable(dnd[it].SignalName.c_str(), false, 0, ImVec2(100, 0));
+			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+				ImGui::SetDragDropPayload("MY_DND", &it, sizeof(int));
+				ImPlot::ItemIcon(dnd[it].Color); ImGui::SameLine();
+				ImGui::TextUnformatted(dnd[it].SignalName.c_str());
+				ImGui::EndDragDropSource();
+			}
 		}
-		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap)
-		{
-			dnd[curr_id].Data.resize(val.size());
-			dnd[curr_id].Color = RandomColor();
-			dnd[curr_id].SignalName = key;
-			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (double)x; });
-			curr_id++;
-		}
-		curr_id = 0;
 	}
 	else
 	{
@@ -383,7 +367,20 @@ void DataClientLayer::MultiSignalPlot()
 	}
 
 	ImGui::EndChild();
+	/*------------------------------------------ End child for DnD gen-------------------------------------------------------------*/
 
+	/*------------------------------------------ Begin Drag and Drop target--------------------------------------------------------*/
+	if (ImGui::BeginDragDropTarget()) {
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MY_DND")) {
+			int i = *(int*)payload->Data; dnd[i].Reset();
+		}
+		ImGui::EndDragDropTarget();
+	}
+	/*------------------------------------------ End Drag and Drop target----------------------------------------------------------*/
+	
+	ImGui::SameLine();
+	ImGui::BeginChild("DND_RIGHT", ImVec2(-1, 400));
+	/*------------------------------------------ Begin Subplots--------------------------------------------------------------------*/
 	if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1, 400), flags)) 
 	{
 		for (int i = 0; i < rows * cols; ++i) {
@@ -450,10 +447,11 @@ void DataClientLayer::MultiSignalPlot()
 		}
 		ImPlot::EndSubplots();
 	}
-
+	ImGui::EndChild();
+	/*------------------------------------------ End Subplots----------------------------------------------------------------------*/
 	
+	/*------------------------------------------ Begin Top menu for Load and config------------------------------------------------*/
 	/*Menu for changing amount of plots*/
-
 	if (ImGui::BeginMenuBar()) {
 		if (ImGui::BeginMenu("Config")) {
 			ImGui::MenuItem("Change Row/Columns", NULL, &show_rows_cols);
@@ -485,8 +483,47 @@ void DataClientLayer::MultiSignalPlot()
 		m_LoadRunModalOpen = ImGui::BeginPopupModal("Load Run", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 		if (m_LoadRunModalOpen) { LoadRunModal(); }
 		
-	}
+		if (!l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap.empty())
+		{
+			// Workflow:
+			// fill DnD vector
+			// insert into list
+			// val is a vector with the data for the specified key
+			// the Data vector is a EAtelemetrydouble_t vector which takes the x (time defined above, and the data from the map file
+			// Since Data is a EAtelemetrydouble_t vector, we need to iterate over it and fill it with the vector members from the map
 
+			static int curr_id = 0;
+			EAtelemetryfloat_t time = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap["Current time"];
+			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap)
+			{
+				dnd[curr_id].Data.resize(val.size());
+				dnd[curr_id].Color = RandomColor();
+				dnd[curr_id].SignalName = key;
+				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (double)x; });
+				curr_id++;
+			}
+			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap)
+			{
+				dnd[curr_id].Data.resize(val.size());
+				dnd[curr_id].Color = RandomColor();
+				dnd[curr_id].SignalName = key;
+				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (double)x; });
+				curr_id++;
+			}
+			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap)
+			{
+				dnd[curr_id].Data.resize(val.size());
+				dnd[curr_id].Color = RandomColor();
+				dnd[curr_id].SignalName = key;
+				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (double)x; });
+				curr_id++;
+			}
+			curr_id = 0;
+		}
+
+	}
+	/*------------------------------------------ End Top menu for Load and config--------------------------------------------------*/
+	
 	ImGui::End();
 }
 

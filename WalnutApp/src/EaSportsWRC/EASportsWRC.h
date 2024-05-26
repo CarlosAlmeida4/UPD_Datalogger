@@ -9,7 +9,7 @@
 #include <string>
 #include <thread>
 
-#define EASPORTS_DATA_SIZE 56
+#define EASPORTS_DATA_SIZE 50 // TODO: Increase size of data written into YAML, everything should go into it
 
 /* * * * * Type Definitions * * * * */
 
