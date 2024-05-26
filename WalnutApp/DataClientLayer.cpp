@@ -338,7 +338,7 @@ void DataClientLayer::MultiSignalPlot()
 	
 	/*------------------------------------------ Begin child for DnD gen-----------------------------------------------------------*/
 	// child window to serve as initial source for our DND items
-	ImGui::BeginChild("DND_LEFT", ImVec2(100, 400));
+	ImGui::BeginChild("DND_LEFT", ImVec2(225, -1));
 
 	if (!l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap.empty())
 	{	
@@ -352,7 +352,7 @@ void DataClientLayer::MultiSignalPlot()
 			if (dnd[it].Plt > 0)
 				continue;
 			ImPlot::ItemIcon(dnd[it].Color); ImGui::SameLine();
-			ImGui::Selectable(dnd[it].SignalName.c_str(), false, 0, ImVec2(100, 0));
+			ImGui::Selectable(dnd[it].SignalName.c_str(), false, 0, ImVec2(225, 0));
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
 				ImGui::SetDragDropPayload("MY_DND", &it, sizeof(int));
 				ImPlot::ItemIcon(dnd[it].Color); ImGui::SameLine();
@@ -379,9 +379,9 @@ void DataClientLayer::MultiSignalPlot()
 	/*------------------------------------------ End Drag and Drop target----------------------------------------------------------*/
 	
 	ImGui::SameLine();
-	ImGui::BeginChild("DND_RIGHT", ImVec2(-1, 400));
+	///ImGui::BeginChild("DND_RIGHT", ImVec2(-1, -1));
 	/*------------------------------------------ Begin Subplots--------------------------------------------------------------------*/
-	if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1, 400), flags)) 
+	if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1, -1), flags)) 
 	{
 		for (int i = 0; i < rows * cols; ++i) {
 			if (ImPlot::BeginPlot("")) {
@@ -447,7 +447,7 @@ void DataClientLayer::MultiSignalPlot()
 		}
 		ImPlot::EndSubplots();
 	}
-	ImGui::EndChild();
+	//ImGui::EndChild();
 	/*------------------------------------------ End Subplots----------------------------------------------------------------------*/
 	
 	/*------------------------------------------ Begin Top menu for Load and config------------------------------------------------*/
