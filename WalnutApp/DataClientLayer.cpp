@@ -28,7 +28,7 @@ inline T RandomRange(T min, T max) {
 	return min + scale * (max - min);
 }
 
-ImVec4 RandomColor() {
+static ImVec4 RandomColor() {
 	ImVec4 col;
 	col.x = RandomRange(0.0f, 1.0f);
 	col.y = RandomRange(0.0f, 1.0f);
@@ -320,16 +320,8 @@ void DataClientLayer::MultiSignalPlot()
 	
 	static bool show_rows_cols = false;
 
-	struct MyDndItem {
-		int              Idx;
-		int              Plt;
-		ImAxis           Yax;
-		ImVector<ImVec2> Data;
-		ImVec4           Color;
-		void Reset() { Plt = 0; Yax = ImAxis_Y1; }
-	};
 
-	static MyDndItem dnd[EASPORTS_DATA_SIZE];
+	static DragAndDropItem dnd[EASPORTS_DATA_SIZE];
 
 	/*
 	Workflow:
@@ -352,18 +344,38 @@ void DataClientLayer::MultiSignalPlot()
 		// Workflow:
 		// fill DnD vector
 		// insert into list
+		// val is a vector with the data for the specified key
+		// the Data vector is a EAtelemetrydouble_t vector which takes the x (time defined above, and the data from the map file
+		// Since Data is a EAtelemetrydouble_t vector, we need to iterate over it and fill it with the vector members from the map
+		// TODO: create a loop that fills the dnd structure
+		
 		static int curr_id = 0;
 		EAtelemetryfloat_t time = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap["Current time"];
 		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap)
 		{
-			// val is a vector with the data for the specified key
-			// the Data vector is a ImVec2 vector which takes the x (time defined above, and the data from the map file
-			//Since Data is a 2D vector, we need to iterate over it and fill it with the vector members from the map
-			//TODO: create a loop that fills the dnd structure
-			dnd[curr_id].Data
+			dnd[curr_id].Data.resize(val.size()); 
+			dnd[curr_id].Color = RandomColor();
+			dnd[curr_id].SignalName = key;
+			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (double)x; });
+			curr_id++;
 		}
-		for (auto& it : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap)
-		for (auto& it : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap)
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap)
+		{
+			dnd[curr_id].Data.resize(val.size());
+			dnd[curr_id].Color = RandomColor();
+			dnd[curr_id].SignalName = key;
+			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (double)x; });
+			curr_id++;
+		}
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap)
+		{
+			dnd[curr_id].Data.resize(val.size());
+			dnd[curr_id].Color = RandomColor();
+			dnd[curr_id].SignalName = key;
+			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (double)x; });
+			curr_id++;
+		}
+		curr_id = 0;
 	}
 	else
 	{

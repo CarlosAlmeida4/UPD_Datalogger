@@ -9,6 +9,7 @@
 #include <filesystem>
 
 #include "ImPlot/implot.h"
+#include "src/EASportsWRC/EASportsWRC.h"
 
 
 class DataClientLayer : public Walnut::Layer
@@ -44,9 +45,21 @@ private:
 	void LoadRunModal();
 
 public:
-
+	struct DragAndDropItem {
+		int              Idx;
+		int              Plt;
+		ImAxis           Yax;
+		EAtelemetrydouble_t Data;
+		ImVec4           Color;
+		std::string SignalName;
+		void Reset() { Plt = 0; Yax = ImAxis_Y1; }
+	};
 
 private:
+
+	
+
+
 	std::unique_ptr<Walnut::Client> m_Client;
 	Walnut::UI::Console m_Console{ "Chat" };
 	std::string m_ServerIP;
