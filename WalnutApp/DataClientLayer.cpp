@@ -320,9 +320,9 @@ void DataClientLayer::MultiSignalPlot()
 	
 	static bool show_rows_cols = false;
 
-
-	static DragAndDropItem dnd[EASPORTS_DATA_SIZE];
-
+	const int dnd_size = EASPORTS_DATA_SIZE;
+	static DragAndDropItem dnd[dnd_size];
+	static EAtelemetryfloat_t time;
 	/*
 	Workflow:
 	1. load map in EAsportsWRC class, if no current data, tell user to load file
@@ -343,11 +343,11 @@ void DataClientLayer::MultiSignalPlot()
 	if (!l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap.empty())
 	{	
 		if (ImGui::Button("Reset Data")) {
-			for (int k = 0; k < EASPORTS_DATA_SIZE; ++k)
+			for (int k = 0; k < dnd_size; ++k)
 				dnd[k].Reset();
 			//dndx = dndy = NULL;
 		}
-		for (int it = 0; it < EASPORTS_DATA_SIZE; it++)
+		for (int it = 0; it < dnd_size; it++)
 		{
 			if (dnd[it].Plt > 0)
 				continue;
@@ -385,61 +385,26 @@ void DataClientLayer::MultiSignalPlot()
 	{
 		for (int i = 0; i < rows * cols; ++i) {
 			if (ImPlot::BeginPlot("")) {
-				float fc = 0.01f;
-				ImPlot::PlotLineG("common", SinewaveGetter, &fc, 1000);
-				for (auto& it : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap)
+				for (int k = 0; k < dnd_size; k++)
 				{
-					std::string label = it.first;
-					//ImPlot::PlotLineG(label.c_str(), MapGetter, &label, it.second.size());
-					if (ImPlot::BeginDragDropSourceItem(label.c_str()))
-					{
-						//curj = j;
-						ImGui::SetDragDropPayload("MY_DND", NULL, 0);
-						ImGui::TextUnformatted(label.c_str());
-						ImPlot::EndDragDropSource();
+					if (dnd[k].Plt == 1 && dnd[k].Data.size() > 0) {
+						ImPlot::SetAxis(dnd[k].Yax);
+						ImPlot::SetNextLineStyle(dnd[k].Color);
+						ImPlot::PlotLine(dnd[k].SignalName.c_str(), &time[0], &dnd[k].Data[0], dnd[k].Data.size(), 0, 0, 2 * sizeof(float));
+						// allow legend item labels to be DND sources
+						if (ImPlot::BeginDragDropSourceItem(dnd[k].SignalName.c_str())) {
+							ImGui::SetDragDropPayload("MY_DND", &k, sizeof(int));
+							ImPlot::ItemIcon(dnd[k].Color); ImGui::SameLine();
+							ImGui::TextUnformatted(dnd[k].SignalName.c_str());
+							ImPlot::EndDragDropSource();
+						}
 					}
 				}
-				for (auto& it : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap)
-				{
-					std::string label = it.first;
-					//ImPlot::PlotLineG(label.c_str(), MapGetter, &label, it.second.size());
-					if (ImPlot::BeginDragDropSourceItem(label.c_str()))
-					{
-						//curj = j;
-						ImGui::SetDragDropPayload("MY_DND", NULL, 0);
-						ImGui::TextUnformatted(label.c_str());
-						ImPlot::EndDragDropSource();
-					}
-				}
-				for (auto& it : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap)
-				{
-					std::string label = it.first;
-					//ImPlot::PlotLineG(label.c_str(), MapGetter, &label, it.second.size());
-					if (ImPlot::BeginDragDropSourceItem(label.c_str()))
-					{
-						//curj = j;
-						ImGui::SetDragDropPayload("MY_DND", NULL, 0);
-						ImGui::TextUnformatted(label.c_str());
-						ImPlot::EndDragDropSource();
-					}
-				}
-				//for (int j = 0; j < 6; ++j) {
-				//	if (id[j] == i) {
-				//		char label[8];
-				//		float fj = 0.01f * (j + 2);
-				//		sprintf(label, "data%d", j);
-				//		ImPlot::PlotLineG(label, SinewaveGetter, &fj, 1000);
-				//		if (ImPlot::BeginDragDropSourceItem(label)) {
-				//			curj = j;
-				//			ImGui::SetDragDropPayload("MY_DND", NULL, 0);
-				//			ImGui::TextUnformatted(label);
-				//			ImPlot::EndDragDropSource();
-				//		}
-				//	}
-				//}
+				// allow the main plot area to be a DND target
 				if (ImPlot::BeginDragDropTargetPlot()) {
-					if (ImGui::AcceptDragDropPayload("MY_DND"))
-						//id[curj] = i;
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MY_DND")) {
+						int i = *(int*)payload->Data; dnd[i].Plt = 1; dnd[i].Yax = ImAxis_Y1;
+					}
 					ImPlot::EndDragDropTarget();
 				}
 				ImPlot::EndPlot();
@@ -493,13 +458,13 @@ void DataClientLayer::MultiSignalPlot()
 			// Since Data is a EAtelemetrydouble_t vector, we need to iterate over it and fill it with the vector members from the map
 
 			static int curr_id = 0;
-			EAtelemetryfloat_t time = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap["Current time"];
+			time = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap["Current time"];
 			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap)
 			{
 				dnd[curr_id].Data.resize(val.size());
 				dnd[curr_id].Color = RandomColor();
 				dnd[curr_id].SignalName = key;
-				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (double)x; });
+				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
 				curr_id++;
 			}
 			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap)
@@ -507,7 +472,7 @@ void DataClientLayer::MultiSignalPlot()
 				dnd[curr_id].Data.resize(val.size());
 				dnd[curr_id].Color = RandomColor();
 				dnd[curr_id].SignalName = key;
-				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (double)x; });
+				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
 				curr_id++;
 			}
 			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap)
@@ -515,7 +480,7 @@ void DataClientLayer::MultiSignalPlot()
 				dnd[curr_id].Data.resize(val.size());
 				dnd[curr_id].Color = RandomColor();
 				dnd[curr_id].SignalName = key;
-				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (double)x; });
+				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
 				curr_id++;
 			}
 			curr_id = 0;

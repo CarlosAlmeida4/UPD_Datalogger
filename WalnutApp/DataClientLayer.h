@@ -49,7 +49,7 @@ public:
 		int              Idx;
 		int              Plt;
 		ImAxis           Yax;
-		EAtelemetrydouble_t Data;
+		EAtelemetryfloat_t Data;
 		ImVec4           Color;
 		std::string SignalName;
 		void Reset() { Plt = 0; Yax = ImAxis_Y1; }
