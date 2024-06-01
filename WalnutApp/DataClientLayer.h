@@ -50,6 +50,7 @@ public:
 		int              Plt;
 		ImAxis           Yax;
 		EAtelemetryfloat_t Data;
+		ImVector<ImVec2> DataVec2;
 		ImVec4           Color;
 		std::string SignalName;
 		void Reset() { Plt = 0; Yax = ImAxis_Y1; int SubPlotId = -1; }

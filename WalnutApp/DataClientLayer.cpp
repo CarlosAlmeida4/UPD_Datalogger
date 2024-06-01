@@ -390,7 +390,7 @@ void DataClientLayer::MultiSignalPlot()
 					if (dnd[k].Plt == 1 && dnd[k].Data.size() > 0 && dnd[k].SubPlotId == i) {
 						ImPlot::SetAxis(dnd[k].Yax);
 						ImPlot::SetNextLineStyle(dnd[k].Color);
-						ImPlot::PlotLine(dnd[k].SignalName.c_str(), &time[0], &dnd[k].Data[0], dnd[k].Data.size(), 0, 0, 2 * sizeof(float));
+ 						ImPlot::PlotLine(dnd[k].SignalName.c_str(), &dnd[k].DataVec2[0].x, &dnd[k].DataVec2[0].y, dnd[k].DataVec2.size(), 0, 0, 2 * sizeof(float));
 						// allow legend item labels to be DND sources
 						if (ImPlot::BeginDragDropSourceItem(dnd[k].SignalName.c_str())) {
 							ImGui::SetDragDropPayload("MY_DND", &k, sizeof(int));
@@ -465,9 +465,14 @@ void DataClientLayer::MultiSignalPlot()
 			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap)
 			{
 				dnd[curr_id].Data.resize(val.size());
+				//dnd[curr_id].DataVec2.resize(val.size());
 				dnd[curr_id].Color = RandomColor();
 				dnd[curr_id].SignalName = key;
 				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
+				{
+					dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
+				}
 				curr_id++;
 			}
 			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap)
@@ -476,6 +481,10 @@ void DataClientLayer::MultiSignalPlot()
 				dnd[curr_id].Color = RandomColor();
 				dnd[curr_id].SignalName = key;
 				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
+				{
+					dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
+				}
 				curr_id++;
 			}
 			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap)
@@ -484,8 +493,13 @@ void DataClientLayer::MultiSignalPlot()
 				dnd[curr_id].Color = RandomColor();
 				dnd[curr_id].SignalName = key;
 				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
+				{
+					dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
+				}
 				curr_id++;
 			}
+			
 			curr_id = 0;
 		}
 
