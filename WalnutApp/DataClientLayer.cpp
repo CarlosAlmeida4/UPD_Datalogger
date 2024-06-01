@@ -22,8 +22,20 @@
 
 #include <filesystem>
 
+template <typename T>
+inline T RandomRange(T min, T max) {
+	T scale = rand() / (T)RAND_MAX;
+	return min + scale * (max - min);
+}
 
-
+static ImVec4 RandomColor() {
+	ImVec4 col;
+	col.x = RandomRange(0.0f, 1.0f);
+	col.y = RandomRange(0.0f, 1.0f);
+	col.z = RandomRange(0.0f, 1.0f);
+	col.w = 1.0f;
+	return col;
+}
 
 // utility structure for realtime plot
 struct ScrollingBuffer {
@@ -75,7 +87,7 @@ void DataClientLayer::OnUIRender()
 	ImPlot::ShowDemoWindow();
 	StageStatus();
 	if (m_ShowBrakeData) BrakeData();
-	if (m_ShowMultiSignalPlot) MultiSignalPlot();
+	if (m_LoadRunAndShowMultiSignalPlot) LoadRunAndMultiSignalPlot();
 	if(m_ShowDriverInputStatus) DriverInputsStatus();
 	if (m_ShowPositionPlot) VehiclePosition();
 	if (m_ShowShiftLight) ShiftLight();
@@ -162,98 +174,6 @@ void DataClientLayer::StageStatus()
 	if (m_StoreRunModalOpen) { StoreRunModal(); }
 
 	ImGui::End();
-}
-
-void DataClientLayer::StoreRunModal()
-{
-	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
-		COINIT_DISABLE_OLE1DDE);
-	static bool isPathEmpty = false;
-
-	ImGui::Text("Storage location");
-	ImGui::InputText("##Storage", &m_StoragePath);
-	ImGui::SameLine();
-	
-	if (ImGui::Button("Select"))
-	{
-		if (SUCCEEDED(hr))
-		{
-			IFileOpenDialog* pFileOpen;
-
-			// Create the FileOpenDialog object.
-			hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
-				IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
-			
-			DWORD dwOptions;
-			if (SUCCEEDED(pFileOpen->GetOptions(&dwOptions)))
-			{
-				pFileOpen->SetOptions(dwOptions | FOS_PICKFOLDERS);
-			}
-
-			if (SUCCEEDED(hr))
-			{
-				// Show the Open dialog box.
-				hr = pFileOpen->Show(NULL);
-
-				// Get the file name from the dialog box.
-				if (SUCCEEDED(hr))
-				{
-					IShellItem* pItem;
-					hr = pFileOpen->GetResult(&pItem);
-					if (SUCCEEDED(hr))
-					{
-						PWSTR pszFilePath;
-						hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
-
-						// Display the file name to the user.
-						if (SUCCEEDED(hr))
-						{
-							std::wstring wss = pszFilePath;
-							std::string sss(wss.begin(), wss.end());
-							m_StoragePath = sss;
-							CoTaskMemFree(pszFilePath);
-						}
-						pItem->Release();
-					}
-				}
-				pFileOpen->Release();
-			}
-			CoUninitialize();
-		}
-		
-	}
-	
-	ImGui::Text("File name");
-	ImGui::InputText("##file", &m_StorageFileName);
-
-	ImGui::Separator();
-	
-	if (isPathEmpty)
-	{
-		ImGui::Text("Please select a folder and insert a file name");
-	}
-	
-	if (ImGui::Button("Save"))
-	{
-		if (0 == m_StorageFileName.size() || 0 == m_StoragePath.size())
-		{
-			isPathEmpty = true;
-		}
-		else
-		{
-			isPathEmpty = false;
-			std::string l_SCompletePath = m_StoragePath + "\\" + m_StorageFileName + ".yaml";
-			std::filesystem::path l_CompletePath = l_SCompletePath;
-			l_EASportsWRC.StoreVector(l_CompletePath);
-			ImGui::CloseCurrentPopup();
-		}
-	}
-	
-	ImGui::SameLine();
-	if (ImGui::Button("Cancel")) { ImGui::CloseCurrentPopup(); }
-
-	ImGui::EndPopup();
-
 }
 
 void DataClientLayer::BrakeData()
@@ -366,39 +286,119 @@ ImPlotPoint SinewaveGetter(int i, void* data) {
 	return ImPlotPoint(i, sinf(f * i));
 }
 
-void DataClientLayer::MultiSignalPlot()
+ImPlotPoint MapGetter(int i, void* key) {
+	std::string& lkey = *(static_cast<std::string*>(key));
+	//std::cout << lkey << std::endl;
+
+	ImPlotPoint retPlotPoint;
+	if (l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap.count(lkey) > 0)
+	{
+		EAtelemetrybyte_t localVec = l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap[lkey];
+		retPlotPoint = ImPlotPoint(i, localVec[i]);
+	}
+	if (l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap.count(lkey) > 0)
+	{
+		EAtelemetrydouble_t localVec = l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap[lkey];
+		retPlotPoint = ImPlotPoint(i, localVec[i]);
+	}
+	if (l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap.count(lkey) > 0)
+	{
+		EAtelemetryfloat_t localVec = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap[lkey];
+		retPlotPoint = ImPlotPoint(i, localVec[i]);
+	}
+
+	return retPlotPoint;
+}
+
+void DataClientLayer::LoadRunAndMultiSignalPlot()
 {
-	static ImPlotSubplotFlags flags = ImPlotSubplotFlags_ShareItems;
+	static ImPlotSubplotFlags flags = ImPlotSubplotFlags_ShareItems | ImPlotSubplotFlags_LinkAllX;
 	static int rows = 4;
 	static int cols = 4;
 	static int id[] = { 0,1,2,3,4,5 };
 	static int curj = -1;
+	
+	static bool show_rows_cols = false;
 
-	ImGui::Begin("Signal Plots", &m_ShowMultiSignalPlot);
+	const int dnd_size = EASPORTS_DATA_SIZE;
+	static DragAndDropItem dnd[dnd_size];
+	static EAtelemetryfloat_t time;
+	
+	/*------------------------------------------ Begin widgets---------------------------------------------------------------------*/
+	ImGui::Begin("Signal Plots", &m_LoadRunAndShowMultiSignalPlot, ImGuiWindowFlags_MenuBar);
+	
+	/*------------------------------------------ Begin child for DnD gen-----------------------------------------------------------*/
+	// child window to serve as initial source for our DND items
+	ImGui::BeginChild("DND_LEFT", ImVec2(225, -1));
 
-	if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1, 400), flags)) 
+	if (!l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap.empty())
+	{	
+		if (ImGui::Button("Reset Data")) {
+			for (int k = 0; k < dnd_size; ++k)
+				dnd[k].Reset();
+			//dndx = dndy = NULL;
+		}
+		for (int it = 0; it < dnd_size; it++)
+		{
+			if (dnd[it].Plt > 0)
+				continue;
+			ImPlot::ItemIcon(dnd[it].Color); ImGui::SameLine();
+			ImGui::Selectable(dnd[it].SignalName.c_str(), false, 0, ImVec2(225, 0));
+			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+				ImGui::SetDragDropPayload("MY_DND", &it, sizeof(int));
+				ImPlot::ItemIcon(dnd[it].Color); ImGui::SameLine();
+				ImGui::TextUnformatted(dnd[it].SignalName.c_str());
+				ImGui::EndDragDropSource();
+			}
+		}
+	}
+	else
+	{
+		ImGui::Text("Load a file or start a run");
+	}
+
+	ImGui::EndChild();
+	/*------------------------------------------ End child for DnD gen-------------------------------------------------------------*/
+
+	/*------------------------------------------ Begin Drag and Drop target--------------------------------------------------------*/
+	if (ImGui::BeginDragDropTarget()) {
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MY_DND")) {
+			int i = *(int*)payload->Data; dnd[i].Reset();
+		}
+		ImGui::EndDragDropTarget();
+	}
+	/*------------------------------------------ End Drag and Drop target----------------------------------------------------------*/
+	
+	ImGui::SameLine();
+	///ImGui::BeginChild("DND_RIGHT", ImVec2(-1, -1));
+	/*------------------------------------------ Begin Subplots--------------------------------------------------------------------*/
+	if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1, -1), flags)) 
 	{
 		for (int i = 0; i < rows * cols; ++i) {
 			if (ImPlot::BeginPlot("")) {
-				float fc = 0.01f;
-				ImPlot::PlotLineG("common", SinewaveGetter, &fc, 1000);
-				for (int j = 0; j < 6; ++j) {
-					if (id[j] == i) {
-						char label[8];
-						float fj = 0.01f * (j + 2);
-						sprintf(label, "data%d", j);
-						ImPlot::PlotLineG(label, SinewaveGetter, &fj, 1000);
-						if (ImPlot::BeginDragDropSourceItem(label)) {
-							curj = j;
-							ImGui::SetDragDropPayload("MY_DND", NULL, 0);
-							ImGui::TextUnformatted(label);
+				for (int k = 0; k < dnd_size; k++)
+				{
+					if (dnd[k].Plt == 1 && dnd[k].Data.size() > 0 && dnd[k].SubPlotId == i) {
+						ImPlot::SetAxis(dnd[k].Yax);
+						ImPlot::SetNextLineStyle(dnd[k].Color);
+ 						ImPlot::PlotLine(dnd[k].SignalName.c_str(), &dnd[k].DataVec2[0].x, &dnd[k].DataVec2[0].y, dnd[k].DataVec2.size(), 0, 0, 2 * sizeof(float));
+						// allow legend item labels to be DND sources
+						if (ImPlot::BeginDragDropSourceItem(dnd[k].SignalName.c_str())) {
+							ImGui::SetDragDropPayload("MY_DND", &k, sizeof(int));
+							ImPlot::ItemIcon(dnd[k].Color); ImGui::SameLine();
+							ImGui::TextUnformatted(dnd[k].SignalName.c_str());
 							ImPlot::EndDragDropSource();
 						}
 					}
 				}
+				// allow the main plot area to be a DND target
 				if (ImPlot::BeginDragDropTargetPlot()) {
-					if (ImGui::AcceptDragDropPayload("MY_DND"))
-						id[curj] = i;
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MY_DND")) {
+						int Z = *(int*)payload->Data; 
+						dnd[Z].Plt = 1; 
+						dnd[Z].SubPlotId = i;
+						dnd[Z].Yax = ImAxis_Y1;
+					}
 					ImPlot::EndDragDropTarget();
 				}
 				ImPlot::EndPlot();
@@ -406,7 +406,103 @@ void DataClientLayer::MultiSignalPlot()
 		}
 		ImPlot::EndSubplots();
 	}
+	//ImGui::EndChild();
+	/*------------------------------------------ End Subplots----------------------------------------------------------------------*/
+	
+	/*------------------------------------------ Begin Top menu for Load and config------------------------------------------------*/
+	/*Menu for changing amount of plots*/
+	if (ImGui::BeginMenuBar()) {
+		if (ImGui::BeginMenu("Config")) {
+			ImGui::MenuItem("Change Row/Columns", NULL, &show_rows_cols);
+			ImGui::MenuItem("Load", NULL, &m_LoadRunModalRequest);
+			ImGui::EndMenu();
+		}
+		ImGui::EndMenuBar();
+	}
+	if (show_rows_cols)
+	{
+		ImGui::Begin("Configure Rows & Columns", &show_rows_cols);
+	
+		ImGui::InputInt("Rows", &rows);
+		ImGui::InputInt("Columns", &cols);
+		if (ImGui::Button("Done"))
+		{
+			show_rows_cols = false;
+		}
+		ImGui::End();
+	}
+	else if (m_LoadRunModalRequest)
+	{
+		//start popup
+		ImGui::OpenPopup("Load Run");
+		// Always center this window when appearing
+		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+	
+		m_LoadRunModalOpen = ImGui::BeginPopupModal("Load Run", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+		if (m_LoadRunModalOpen) 
+		{ 
+			l_EASportsWRC.ClearMap();//Clear possible previous runs
+			LoadRunModal();
+		}
+		
+		if (!l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap.empty())
+		{
+			// Workflow:
+			// fill DnD vector
+			// insert into list
+			// val is a vector with the data for the specified key
+			// the Data vector is a EAtelemetrydouble_t vector which takes the x (time defined above, and the data from the map file
+			// Since Data is a EAtelemetrydouble_t vector, we need to iterate over it and fill it with the vector members from the map
 
+			static int curr_id = 0;
+			time = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap["Current time"];
+			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap)
+			{
+				dnd[curr_id].Data.resize(val.size());
+				dnd[curr_id].Color = RandomColor();
+				dnd[curr_id].SignalName = key;
+				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+				if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
+				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
+				{
+					dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
+				}
+				curr_id++;
+			}
+			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap)
+			{
+				dnd[curr_id].Data.resize(val.size());
+				dnd[curr_id].Color = RandomColor();
+				dnd[curr_id].SignalName = key;
+				if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
+				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
+				{
+					dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
+				}
+				curr_id++;
+			}
+			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap)
+			{
+				dnd[curr_id].Data.resize(val.size());
+				dnd[curr_id].Color = RandomColor();
+				dnd[curr_id].SignalName = key;
+				if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
+				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
+				{
+					dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
+				}
+				curr_id++;
+			}
+			
+			curr_id = 0;
+		}
+
+	}
+	/*------------------------------------------ End Top menu for Load and config--------------------------------------------------*/
+	
 	ImGui::End();
 }
 
@@ -548,6 +644,189 @@ void DataClientLayer::ShiftLight()
 	ImGui::End();
 }
 
+void DataClientLayer::StoreRunModal()
+{
+	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
+		COINIT_DISABLE_OLE1DDE);
+	static bool isPathEmpty = false;
+
+	ImGui::Text("Storage location");
+	ImGui::InputText("##Storage", &m_StoragePath);
+	ImGui::SameLine();
+
+	if (ImGui::Button("Select"))
+	{
+		if (SUCCEEDED(hr))
+		{
+			IFileOpenDialog* pFileOpen;
+
+			// Create the FileOpenDialog object.
+			hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+				IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+
+			DWORD dwOptions;
+			if (SUCCEEDED(pFileOpen->GetOptions(&dwOptions)))
+			{
+				pFileOpen->SetOptions(dwOptions | FOS_PICKFOLDERS);
+			}
+
+			if (SUCCEEDED(hr))
+			{
+				// Show the Open dialog box.
+				hr = pFileOpen->Show(NULL);
+
+				// Get the file name from the dialog box.
+				if (SUCCEEDED(hr))
+				{
+					IShellItem* pItem;
+					hr = pFileOpen->GetResult(&pItem);
+					if (SUCCEEDED(hr))
+					{
+						PWSTR pszFilePath;
+						hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+
+						// Display the file name to the user.
+						if (SUCCEEDED(hr))
+						{
+							std::wstring wss = pszFilePath;
+							std::string sss(wss.begin(), wss.end());
+							m_StoragePath = sss;
+							CoTaskMemFree(pszFilePath);
+						}
+						pItem->Release();
+					}
+				}
+				pFileOpen->Release();
+			}
+			CoUninitialize();
+		}
+
+	}
+
+	ImGui::Text("File name");
+	ImGui::InputText("##file", &m_StorageFileName);
+
+	ImGui::Separator();
+
+	if (isPathEmpty)
+	{
+		ImGui::Text("Please select a folder and insert a file name");
+	}
+
+	if (ImGui::Button("Save"))
+	{
+		if (0 == m_StorageFileName.size() || 0 == m_StoragePath.size())
+		{
+			isPathEmpty = true;
+		}
+		else
+		{
+			isPathEmpty = false;
+			std::string l_SCompletePath = m_StoragePath + "\\" + m_StorageFileName + ".yaml";
+			std::filesystem::path l_CompletePath = l_SCompletePath;
+			l_EASportsWRC.StoreVector(l_CompletePath);
+			ImGui::CloseCurrentPopup();
+		}
+	}
+
+	ImGui::SameLine();
+	if (ImGui::Button("Cancel")) { ImGui::CloseCurrentPopup(); }
+
+	ImGui::EndPopup();
+
+}
+
+void DataClientLayer::LoadRunModal()
+{
+	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
+		COINIT_DISABLE_OLE1DDE);
+	static bool isPathEmpty = false;
+	static std::filesystem::path lPath;
+
+	ImGui::Text("Storage location");
+	ImGui::InputText("##Storage", &m_StoragePath);
+	ImGui::SameLine();
+
+	if (ImGui::Button("Select"))
+	{
+		if (SUCCEEDED(hr))
+		{
+			IFileOpenDialog* pFileOpen;
+
+			// Create the FileOpenDialog object.
+			hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+				IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+
+			DWORD dwOptions;
+			if (SUCCEEDED(pFileOpen->GetOptions(&dwOptions)))
+			{
+				pFileOpen->SetOptions(dwOptions | FOS_FILEMUSTEXIST);
+			}
+
+			if (SUCCEEDED(hr))
+			{
+				// Show the Open dialog box.
+				hr = pFileOpen->Show(NULL);
+
+				// Get the file name from the dialog box.
+				if (SUCCEEDED(hr))
+				{
+					IShellItem* pItem;
+					hr = pFileOpen->GetResult(&pItem);
+					if (SUCCEEDED(hr))
+					{
+						PWSTR pszFilePath;
+						hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+
+						// Display the file name to the user.
+						if (SUCCEEDED(hr))
+						{
+							std::wstring wss = pszFilePath;
+							std::string sss(wss.begin(), wss.end());
+							m_StoragePath = sss;
+							std::filesystem::path path(m_StoragePath);
+							m_StorageFileName = path.filename().string(); // "file"
+							m_StoragePath = path.parent_path().string(); // "/home/dir1/dir2/dir3/dir4"
+							lPath = path;
+							CoTaskMemFree(pszFilePath);
+						}
+						pItem->Release();
+					}
+				}
+				pFileOpen->Release();
+			}
+			CoUninitialize();
+		}
+
+	}
+
+	ImGui::Text("File name");
+	ImGui::InputText("##file", &m_StorageFileName);
+
+	ImGui::Separator();
+
+	if (isPathEmpty)
+	{
+		ImGui::Text("Please select a folder and insert a file name");
+	}
+
+	if (ImGui::Button("Load"))
+	{
+		ImGui::Text("This operation might take some time, please wait");
+		l_EASportsWRC.GenerateMapFromYAML(lPath);
+		ImGui::CloseCurrentPopup();
+		m_LoadRunModalRequest = false;
+	}
+
+	ImGui::SameLine();
+	if (ImGui::Button("Cancel")) 
+	{ 
+		ImGui::CloseCurrentPopup();
+		m_LoadRunModalRequest = false;
+	}
+
+	ImGui::EndPopup();
+}
 
 /***
 
@@ -555,27 +834,12 @@ Getters Setters
 
 ***/
 
-void DataClientLayer::SetShowBrakeData(bool setval)
-{
-	m_ShowBrakeData = setval;
-}
+void DataClientLayer::SetShowBrakeData(bool setval){m_ShowBrakeData = setval;}
 
-void DataClientLayer::SetDriverInputsStatus(bool setval)
-{
-	m_ShowDriverInputStatus = setval;
-}
+void DataClientLayer::SetDriverInputsStatus(bool setval){m_ShowDriverInputStatus = setval;}
 
-void DataClientLayer::SetMultiSignalPlot(bool setval)
-{
-	m_ShowMultiSignalPlot = setval;
-}
+void DataClientLayer::SetLoadRunAndShowMultiSignalPlot(bool setval){ m_LoadRunAndShowMultiSignalPlot = setval;}
 
-void DataClientLayer::SetPositionPlot(bool setval)
-{
-	m_ShowPositionPlot = setval;
-}
+void DataClientLayer::SetPositionPlot(bool setval){m_ShowPositionPlot = setval;}
 
-void DataClientLayer::SetShiftLight(bool setval)
-{
-	m_ShowShiftLight = setval;
-}
+void DataClientLayer::SetShiftLight(bool setval){m_ShowShiftLight = setval;}
