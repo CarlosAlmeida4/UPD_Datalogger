@@ -387,7 +387,7 @@ void DataClientLayer::MultiSignalPlot()
 			if (ImPlot::BeginPlot("")) {
 				for (int k = 0; k < dnd_size; k++)
 				{
-					if (dnd[k].Plt == 1 && dnd[k].Data.size() > 0) {
+					if (dnd[k].Plt == 1 && dnd[k].Data.size() > 0 && dnd[k].SubPlotId == i) {
 						ImPlot::SetAxis(dnd[k].Yax);
 						ImPlot::SetNextLineStyle(dnd[k].Color);
 						ImPlot::PlotLine(dnd[k].SignalName.c_str(), &time[0], &dnd[k].Data[0], dnd[k].Data.size(), 0, 0, 2 * sizeof(float));
@@ -403,7 +403,10 @@ void DataClientLayer::MultiSignalPlot()
 				// allow the main plot area to be a DND target
 				if (ImPlot::BeginDragDropTargetPlot()) {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MY_DND")) {
-						int i = *(int*)payload->Data; dnd[i].Plt = 1; dnd[i].Yax = ImAxis_Y1;
+						int Z = *(int*)payload->Data; 
+						dnd[Z].Plt = 1; 
+						dnd[Z].SubPlotId = i;
+						dnd[Z].Yax = ImAxis_Y1;
 					}
 					ImPlot::EndDragDropTarget();
 				}
