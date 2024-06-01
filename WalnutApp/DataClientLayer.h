@@ -9,6 +9,7 @@
 #include <filesystem>
 
 #include "ImPlot/implot.h"
+#include "src/EASportsWRC/EASportsWRC.h"
 
 
 class DataClientLayer : public Walnut::Layer
@@ -20,7 +21,7 @@ public:
 
 	void SetShowBrakeData(bool setval);
 	void SetDriverInputsStatus(bool setval);
-	void SetMultiSignalPlot(bool setval);
+	void SetLoadRunAndShowMultiSignalPlot(bool setval);
 	void SetPositionPlot(bool setval);
 	void SetShiftLight(bool setval);
 
@@ -35,16 +36,31 @@ private:
 	// Store run modal
 	void StoreRunModal();
 	//Plot multiple signals
-	void MultiSignalPlot();
+	void LoadRunAndMultiSignalPlot();
 	//Plot vehicle position
 	void VehiclePosition();
 	// Shift light with RPM
 	void ShiftLight();
+	// Load stored Run TODO
+	void LoadRunModal();
 
 public:
-
+	struct DragAndDropItem {
+		int              SubPlotId;
+		int              Plt;
+		ImAxis           Yax;
+		EAtelemetryfloat_t Data;
+		ImVector<ImVec2> DataVec2;
+		ImVec4           Color;
+		std::string SignalName;
+		void Reset() { Plt = 0; Yax = ImAxis_Y1; int SubPlotId = -1; }
+	};
 
 private:
+
+	
+
+
 	std::unique_ptr<Walnut::Client> m_Client;
 	Walnut::UI::Console m_Console{ "Chat" };
 	std::string m_ServerIP;
@@ -59,14 +75,15 @@ private:
 	uint32_t m_Color = 0xffffffff;
 
 	bool m_StoreRunModalOpen = false;
+	bool m_LoadRunModalOpen = false;
 	bool m_ShowSuccessfulConnectionMessage = false;
 	std::string m_StoragePath;
 	std::string m_StorageFileName;
 
 	bool m_ShowBrakeData = false;
 	bool m_ShowDriverInputStatus = false;
-	bool m_ShowMultiSignalPlot = false;
+	bool m_LoadRunAndShowMultiSignalPlot = false;
 	bool m_ShowPositionPlot = false;
 	bool m_ShowShiftLight = false;
-	
+	bool m_LoadRunModalRequest = false;
 };
