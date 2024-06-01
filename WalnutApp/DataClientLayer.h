@@ -46,13 +46,13 @@ private:
 
 public:
 	struct DragAndDropItem {
-		int              Idx;
+		int              SubPlotId;
 		int              Plt;
 		ImAxis           Yax;
 		EAtelemetryfloat_t Data;
 		ImVec4           Color;
 		std::string SignalName;
-		void Reset() { Plt = 0; Yax = ImAxis_Y1; }
+		void Reset() { Plt = 0; Yax = ImAxis_Y1; int SubPlotId = -1; }
 	};
 
 private:
