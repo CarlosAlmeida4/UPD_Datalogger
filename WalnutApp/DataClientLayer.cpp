@@ -87,7 +87,7 @@ void DataClientLayer::OnUIRender()
 	ImPlot::ShowDemoWindow();
 	StageStatus();
 	if (m_ShowBrakeData) BrakeData();
-	if (m_ShowMultiSignalPlot) MultiSignalPlot();
+	if (m_LoadRunAndShowMultiSignalPlot) LoadRunAndMultiSignalPlot();
 	if(m_ShowDriverInputStatus) DriverInputsStatus();
 	if (m_ShowPositionPlot) VehiclePosition();
 	if (m_ShowShiftLight) ShiftLight();
@@ -310,7 +310,7 @@ ImPlotPoint MapGetter(int i, void* key) {
 	return retPlotPoint;
 }
 
-void DataClientLayer::MultiSignalPlot()
+void DataClientLayer::LoadRunAndMultiSignalPlot()
 {
 	static ImPlotSubplotFlags flags = ImPlotSubplotFlags_ShareItems | ImPlotSubplotFlags_LinkAllX;
 	static int rows = 4;
@@ -323,18 +323,9 @@ void DataClientLayer::MultiSignalPlot()
 	const int dnd_size = EASPORTS_DATA_SIZE;
 	static DragAndDropItem dnd[dnd_size];
 	static EAtelemetryfloat_t time;
-	/*
-	Workflow:
-	1. load map in EAsportsWRC class, if no current data, tell user to load file
-	2. If load from file, the popup will call a different method from EASportsWRC class (GenerateMapFromYAML)
-	*/
-	if (l_EASportsWRC.GenerateMap())
-	{
-		//using current data
-	}
-
+	
 	/*------------------------------------------ Begin widgets---------------------------------------------------------------------*/
-	ImGui::Begin("Signal Plots", &m_ShowMultiSignalPlot, ImGuiWindowFlags_MenuBar);
+	ImGui::Begin("Signal Plots", &m_LoadRunAndShowMultiSignalPlot, ImGuiWindowFlags_MenuBar);
 	
 	/*------------------------------------------ Begin child for DnD gen-----------------------------------------------------------*/
 	// child window to serve as initial source for our DND items
@@ -449,7 +440,11 @@ void DataClientLayer::MultiSignalPlot()
 		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 	
 		m_LoadRunModalOpen = ImGui::BeginPopupModal("Load Run", NULL, ImGuiWindowFlags_AlwaysAutoResize);
-		if (m_LoadRunModalOpen) { LoadRunModal(); }
+		if (m_LoadRunModalOpen) 
+		{ 
+			l_EASportsWRC.ClearMap();//Clear possible previous runs
+			LoadRunModal();
+		}
 		
 		if (!l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap.empty())
 		{
@@ -465,10 +460,10 @@ void DataClientLayer::MultiSignalPlot()
 			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap)
 			{
 				dnd[curr_id].Data.resize(val.size());
-				//dnd[curr_id].DataVec2.resize(val.size());
 				dnd[curr_id].Color = RandomColor();
 				dnd[curr_id].SignalName = key;
 				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+				if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
 				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
 				{
 					dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
@@ -480,6 +475,7 @@ void DataClientLayer::MultiSignalPlot()
 				dnd[curr_id].Data.resize(val.size());
 				dnd[curr_id].Color = RandomColor();
 				dnd[curr_id].SignalName = key;
+				if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
 				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
 				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
 				{
@@ -492,6 +488,7 @@ void DataClientLayer::MultiSignalPlot()
 				dnd[curr_id].Data.resize(val.size());
 				dnd[curr_id].Color = RandomColor();
 				dnd[curr_id].SignalName = key;
+				if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
 				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
 				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
 				{
@@ -815,6 +812,7 @@ void DataClientLayer::LoadRunModal()
 
 	if (ImGui::Button("Load"))
 	{
+		ImGui::Text("This operation might take some time, please wait");
 		l_EASportsWRC.GenerateMapFromYAML(lPath);
 		ImGui::CloseCurrentPopup();
 		m_LoadRunModalRequest = false;
@@ -840,7 +838,7 @@ void DataClientLayer::SetShowBrakeData(bool setval){m_ShowBrakeData = setval;}
 
 void DataClientLayer::SetDriverInputsStatus(bool setval){m_ShowDriverInputStatus = setval;}
 
-void DataClientLayer::SetMultiSignalPlot(bool setval){m_ShowMultiSignalPlot = setval;}
+void DataClientLayer::SetLoadRunAndShowMultiSignalPlot(bool setval){ m_LoadRunAndShowMultiSignalPlot = setval;}
 
 void DataClientLayer::SetPositionPlot(bool setval){m_ShowPositionPlot = setval;}
 

@@ -21,7 +21,7 @@ public:
 
 	void SetShowBrakeData(bool setval);
 	void SetDriverInputsStatus(bool setval);
-	void SetMultiSignalPlot(bool setval);
+	void SetLoadRunAndShowMultiSignalPlot(bool setval);
 	void SetPositionPlot(bool setval);
 	void SetShiftLight(bool setval);
 
@@ -36,7 +36,7 @@ private:
 	// Store run modal
 	void StoreRunModal();
 	//Plot multiple signals
-	void MultiSignalPlot();
+	void LoadRunAndMultiSignalPlot();
 	//Plot vehicle position
 	void VehiclePosition();
 	// Shift light with RPM
@@ -82,7 +82,7 @@ private:
 
 	bool m_ShowBrakeData = false;
 	bool m_ShowDriverInputStatus = false;
-	bool m_ShowMultiSignalPlot = false;
+	bool m_LoadRunAndShowMultiSignalPlot = false;
 	bool m_ShowPositionPlot = false;
 	bool m_ShowShiftLight = false;
 	bool m_LoadRunModalRequest = false;
