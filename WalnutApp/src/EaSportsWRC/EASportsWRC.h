@@ -259,6 +259,7 @@ class EASportsWRC
 		bool GenerateMap();
 		void GenerateMapFromYAML(const std::filesystem::path& filepath);
 		bool GetisReadFromFile();
+		void ClearMap();
 
 	private:
 		void PrintArray();

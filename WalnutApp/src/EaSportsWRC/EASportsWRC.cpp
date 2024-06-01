@@ -391,6 +391,12 @@ void EASportsWRC::ClearArray()
 	TelemetryData_v.lap_distance.clear();
 }
 
+/***
+
+Map Operations
+
+***/
+
 bool EASportsWRC::GenerateMap()
 {
 	EAtelemetryMap_t l_EAtelemetryMap;
@@ -494,6 +500,13 @@ void EASportsWRC::GenerateMapFromYAML(const std::filesystem::path& filepath)
 
 	}
 	m_EAtelemetryMap = l_EAtelemetryMap;
+}
+
+void EASportsWRC::ClearMap()
+{
+	m_EAtelemetryMap.EAtelemetrybyteMap.clear();
+	m_EAtelemetryMap.EAtelemetrydoubleMap.clear();
+	m_EAtelemetryMap.EAtelemetryfloatMap.clear();
 }
 
 /***
