@@ -397,7 +397,7 @@ Map Operations
 
 ***/
 
-bool EASportsWRC::GenerateMap()
+bool EASportsWRC::GenerateMapFromLiveData()
 {
 	EAtelemetryMap_t l_EAtelemetryMap;
 	if (!TelemetryData_v.gear.empty())

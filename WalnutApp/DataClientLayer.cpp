@@ -88,14 +88,14 @@ void DataClientLayer::OnUIRender()
 	StageStatus();
 	if (m_ShowBrakeData) BrakeData();
 	if (m_LoadRunAndShowMultiSignalPlot) LoadRunAndMultiSignalPlot();
-	if(m_ShowDriverInputStatus) DriverInputsStatus();
+	if (m_ShowDriverInputStatus) DriverInputsStatus();
 	if (m_ShowPositionPlot) VehiclePosition();
 	if (m_ShowShiftLight) ShiftLight();
+	if (m_ShowMultiSignalPlotLive) MultiSignalPlotLive();
 	if (!l_EASportsWRC.isRunning_b)
 	{
 		l_EASportsWRC.startClient();
 	}
-
 }
 
 /***
@@ -834,7 +834,7 @@ void DataClientLayer::MultiSignalPlotLive()
 	static int rows = 4;
 	static int cols = 4;
 
-	static bool isSetup = false;
+	static bool isSetup = true;
 
 	static bool show_rows_cols = false;
 
@@ -842,8 +842,66 @@ void DataClientLayer::MultiSignalPlotLive()
 	static DragAndDropItem dnd[dnd_size];
 	static EAtelemetryfloat_t time;
 
+	/*------------------------------------------ Begin Setup-----------------------------------------------------------------------*/
+	if (isSetup && l_EASportsWRC.GenerateMapFromLiveData())
+	{
+		// Workflow:
+		// fill DnD vector
+		// insert into list
+		// val is a vector with the data for the specified key
+		// the Data vector is a EAtelemetrydouble_t vector which takes the x (time defined above, and the data from the map file
+		// Since Data is a EAtelemetrydouble_t vector, we need to iterate over it and fill it with the vector members from the map
+
+		static int curr_id = 0;
+		time = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap["Current time"];
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap)
+		{
+			dnd[curr_id].Data.resize(val.size());
+			dnd[curr_id].Color = RandomColor();
+			dnd[curr_id].SignalName = key;
+			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+			if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
+			for (int i = 0; i < dnd[curr_id].Data.size(); i++)
+			{
+				dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
+			}
+			curr_id++;
+		}
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap)
+		{
+			dnd[curr_id].Data.resize(val.size());
+			dnd[curr_id].Color = RandomColor();
+			dnd[curr_id].SignalName = key;
+			if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
+			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+			for (int i = 0; i < dnd[curr_id].Data.size(); i++)
+			{
+				dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
+			}
+			curr_id++;
+		}
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap)
+		{
+			dnd[curr_id].Data.resize(val.size());
+			dnd[curr_id].Color = RandomColor();
+			dnd[curr_id].SignalName = key;
+			if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
+			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+			for (int i = 0; i < dnd[curr_id].Data.size(); i++)
+			{
+				dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
+			}
+			curr_id++;
+		}
+		curr_id = 0;
+		isSetup = false;
+	}
+
+
+	/*------------------------------------------ End   Setup-----------------------------------------------------------------------*/
+
 	/*------------------------------------------ Begin widgets---------------------------------------------------------------------*/
-	ImGui::Begin("Signal Plots", &m_LoadRunAndShowMultiSignalPlot, ImGuiWindowFlags_MenuBar);
+	ImGui::Begin("Signal Plots", &m_ShowMultiSignalPlotLive, ImGuiWindowFlags_MenuBar);
 
 	/*------------------------------------------ Begin child for DnD gen-----------------------------------------------------------*/
 	// child window to serve as initial source for our DND items
@@ -863,7 +921,6 @@ void DataClientLayer::MultiSignalPlotLive()
 	/*------------------------------------------ End Drag and Drop target----------------------------------------------------------*/
 
 	ImGui::SameLine();
-	///ImGui::BeginChild("DND_RIGHT", ImVec2(-1, -1));
 	/*------------------------------------------ Begin Subplots--------------------------------------------------------------------*/
 	if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1, -1), flags))
 	{
@@ -899,15 +956,13 @@ void DataClientLayer::MultiSignalPlotLive()
 		}
 		ImPlot::EndSubplots();
 	}
-	//ImGui::EndChild();
 	/*------------------------------------------ End Subplots----------------------------------------------------------------------*/
 
-	/*------------------------------------------ Begin Top menu for Load and config------------------------------------------------*/
+	/*------------------------------------------ Begin Top menu for config------------------------------------------------*/
 	/*Menu for changing amount of plots*/
 	if (ImGui::BeginMenuBar()) {
 		if (ImGui::BeginMenu("Config")) {
 			ImGui::MenuItem("Change Row/Columns", NULL, &show_rows_cols);
-			ImGui::MenuItem("Load", NULL, &m_LoadRunModalRequest);
 			ImGui::EndMenu();
 		}
 		ImGui::EndMenuBar();
@@ -924,77 +979,7 @@ void DataClientLayer::MultiSignalPlotLive()
 		}
 		ImGui::End();
 	}
-	else if (m_LoadRunModalRequest)
-	{
-		//start popup
-		ImGui::OpenPopup("Load Run");
-		// Always center this window when appearing
-		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-		m_LoadRunModalOpen = ImGui::BeginPopupModal("Load Run", NULL, ImGuiWindowFlags_AlwaysAutoResize);
-		if (m_LoadRunModalOpen)
-		{
-			l_EASportsWRC.ClearMap();//Clear possible previous runs
-			LoadRunModal();
-		}
-
-		if (!l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap.empty())
-		{
-			// Workflow:
-			// fill DnD vector
-			// insert into list
-			// val is a vector with the data for the specified key
-			// the Data vector is a EAtelemetrydouble_t vector which takes the x (time defined above, and the data from the map file
-			// Since Data is a EAtelemetrydouble_t vector, we need to iterate over it and fill it with the vector members from the map
-
-			static int curr_id = 0;
-			time = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap["Current time"];
-			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap)
-			{
-				dnd[curr_id].Data.resize(val.size());
-				dnd[curr_id].Color = RandomColor();
-				dnd[curr_id].SignalName = key;
-				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
-				if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
-				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
-				{
-					dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
-				}
-				curr_id++;
-			}
-			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap)
-			{
-				dnd[curr_id].Data.resize(val.size());
-				dnd[curr_id].Color = RandomColor();
-				dnd[curr_id].SignalName = key;
-				if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
-				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
-				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
-				{
-					dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
-				}
-				curr_id++;
-			}
-			for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap)
-			{
-				dnd[curr_id].Data.resize(val.size());
-				dnd[curr_id].Color = RandomColor();
-				dnd[curr_id].SignalName = key;
-				if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
-				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
-				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
-				{
-					dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
-				}
-				curr_id++;
-			}
-
-			curr_id = 0;
-		}
-
-	}
-	/*------------------------------------------ End Top menu for Load and config--------------------------------------------------*/
+	/*------------------------------------------ End Top menu for config--------------------------------------------------*/
 
 	ImGui::End();
 }
@@ -1015,4 +1000,4 @@ void DataClientLayer::SetPositionPlot(bool setval){m_ShowPositionPlot = setval;}
 
 void DataClientLayer::SetShiftLight(bool setval){m_ShowShiftLight = setval;}
 
-void DataClientLayer::SetMultiSignalPlotLive(bool setval) { m_ShowMultiSignalPlotLive = setval };
+void DataClientLayer::SetMultiSignalPlotLive(bool setval) { m_ShowMultiSignalPlotLive = setval;};

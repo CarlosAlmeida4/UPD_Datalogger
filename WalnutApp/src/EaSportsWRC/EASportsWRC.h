@@ -256,7 +256,7 @@ class EASportsWRC
 		int startClient();
 		void stopClient();
 		void receiveData();
-		bool GenerateMap();
+		bool GenerateMapFromLiveData();
 		void GenerateMapFromYAML(const std::filesystem::path& filepath);
 		bool GetisReadFromFile();
 		void ClearMap();

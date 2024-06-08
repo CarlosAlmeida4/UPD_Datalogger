@@ -50,6 +50,10 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 			{
 				dataclientlayer->SetShiftLight(true);
 			}
+			if (ImGui::MenuItem("Plot all Live signals"))
+			{
+				dataclientlayer->SetMultiSignalPlotLive(true);
+			}
 			if (ImGui::MenuItem("Reset Windows"))
 			{
 				dataclientlayer->SetShowBrakeData(false);
@@ -57,7 +61,9 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 				dataclientlayer->SetLoadRunAndShowMultiSignalPlot(false);
 				dataclientlayer->SetPositionPlot(false);
 				dataclientlayer->SetShiftLight(false);
+				dataclientlayer->SetMultiSignalPlotLive(false);
 			}
+			
 			ImGui::EndMenu();
 		}
 	});
