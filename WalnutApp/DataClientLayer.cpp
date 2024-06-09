@@ -169,6 +169,7 @@ void DataClientLayer::StageStatus()
 	if (ImGui::Button("Clear Run"))
 	{
 		l_EASportsWRC.ClearArray();
+		l_EASportsWRC.ClearMap();
 	}
 	m_StoreRunModalOpen = ImGui::BeginPopupModal("Store Run", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 	if (m_StoreRunModalOpen) { StoreRunModal(); }
@@ -476,7 +477,7 @@ void DataClientLayer::LoadRunAndMultiSignalPlot()
 				dnd[curr_id].Color = RandomColor();
 				dnd[curr_id].SignalName = key;
 				if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
-				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](double x) { return (float)x; });
 				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
 				{
 					dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
@@ -489,7 +490,7 @@ void DataClientLayer::LoadRunAndMultiSignalPlot()
 				dnd[curr_id].Color = RandomColor();
 				dnd[curr_id].SignalName = key;
 				if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
-				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](float x) { return (float)x; });
 				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
 				{
 					dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
@@ -843,7 +844,7 @@ void DataClientLayer::MultiSignalPlotLive()
 	static EAtelemetryfloat_t time;
 
 	/*------------------------------------------ Begin Setup-----------------------------------------------------------------------*/
-	if (isSetup && l_EASportsWRC.GenerateMapFromLiveData())
+	if (isSetup && l_EASportsWRC.GenerateMapFromLiveData()) // Initialize dnd structures
 	{
 		// Workflow:
 		// fill DnD vector
@@ -873,7 +874,7 @@ void DataClientLayer::MultiSignalPlotLive()
 			dnd[curr_id].Color = RandomColor();
 			dnd[curr_id].SignalName = key;
 			if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
-			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](double x) { return (float)x; });
 			for (int i = 0; i < dnd[curr_id].Data.size(); i++)
 			{
 				dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
@@ -886,7 +887,7 @@ void DataClientLayer::MultiSignalPlotLive()
 			dnd[curr_id].Color = RandomColor();
 			dnd[curr_id].SignalName = key;
 			if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
-			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](float x) { return (float)x; });
 			for (int i = 0; i < dnd[curr_id].Data.size(); i++)
 			{
 				dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
@@ -896,9 +897,43 @@ void DataClientLayer::MultiSignalPlotLive()
 		curr_id = 0;
 		isSetup = false;
 	}
-
-
+	else if (l_EASportsWRC.UpdateMapFromLiveData()) // update everytime with latest data from the map
+	{
+		time = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap["Current time"];
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap) // loop over  map
+		{
+			for (auto & curr_dnd : dnd) // iterate over drag and drop items
+			{
+				if (curr_dnd.SignalName == key) //found corresponding dnd item to map
+				{
+					curr_dnd.DataVec2.push_back(ImVec2(time.back(), (float)val.back()));
+				}
+			}
+		}
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap) // loop over  map
+		{
+			for (auto& curr_dnd : dnd) // iterate over drag and drop items
+			{
+				if (curr_dnd.SignalName == key) //found corresponding dnd item to map
+				{
+					curr_dnd.DataVec2.push_back(ImVec2(time.back(), (float)val.back()));
+				}
+			}
+		}
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap) // loop over  map
+		{
+			for (auto& curr_dnd : dnd) // iterate over drag and drop items
+			{
+				if (curr_dnd.SignalName == key) //found corresponding dnd item to map
+				{
+					curr_dnd.DataVec2.push_back(ImVec2(time.back(), (float)val.back()));
+				}
+			}
+		}
+	}
 	/*------------------------------------------ End   Setup-----------------------------------------------------------------------*/
+
+
 
 	/*------------------------------------------ Begin widgets---------------------------------------------------------------------*/
 	ImGui::Begin("Signal Plots", &m_ShowMultiSignalPlotLive, ImGuiWindowFlags_MenuBar);
@@ -907,6 +942,27 @@ void DataClientLayer::MultiSignalPlotLive()
 	// child window to serve as initial source for our DND items
 	ImGui::BeginChild("DND_LEFT", ImVec2(225, -1));
 
+	if (!l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap.empty())
+	{
+		if (ImGui::Button("Reset Data")) {
+			for (int k = 0; k < dnd_size; ++k)
+				dnd[k].Reset();
+			//dndx = dndy = NULL;
+		}
+		for (int it = 0; it < dnd_size; it++)
+		{
+			if (dnd[it].Plt > 0)
+				continue;
+			ImPlot::ItemIcon(dnd[it].Color); ImGui::SameLine();
+			ImGui::Selectable(dnd[it].SignalName.c_str(), false, 0, ImVec2(225, 0));
+			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+				ImGui::SetDragDropPayload("MY_DND", &it, sizeof(int));
+				ImPlot::ItemIcon(dnd[it].Color); ImGui::SameLine();
+				ImGui::TextUnformatted(dnd[it].SignalName.c_str());
+				ImGui::EndDragDropSource();
+			}
+		}
+	}
 
 	ImGui::EndChild();
 	/*------------------------------------------ End child for DnD gen-------------------------------------------------------------*/
