@@ -24,6 +24,7 @@ public:
 	void SetLoadRunAndShowMultiSignalPlot(bool setval);
 	void SetPositionPlot(bool setval);
 	void SetShiftLight(bool setval);
+	void SetMultiSignalPlotLive(bool setval);
 
 private:
 	
@@ -43,6 +44,8 @@ private:
 	void ShiftLight();
 	// Load stored Run TODO
 	void LoadRunModal();
+	// Live window for all signals
+	void MultiSignalPlotLive();
 
 public:
 	struct DragAndDropItem {
@@ -86,4 +89,6 @@ private:
 	bool m_ShowPositionPlot = false;
 	bool m_ShowShiftLight = false;
 	bool m_LoadRunModalRequest = false;
+	bool m_ShowMultiSignalPlotLive = false;
+
 };

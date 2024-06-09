@@ -9,7 +9,7 @@
 #include <string>
 #include <thread>
 
-#define EASPORTS_DATA_SIZE 50 // TODO: Increase size of data written into YAML, everything should go into it
+#define EASPORTS_DATA_SIZE 53 // TODO: Increase size of data written into YAML, everything should go into it
 
 /* * * * * Type Definitions * * * * */
 
@@ -238,7 +238,6 @@ class EASportsWRC
 			std::array<EAtelemetry_data_t, CircularBufferMaxSize> circularBuffer;
 		}EAcircularBuff_s;
 		bool OnStage_b = false;
-		bool isReadFromFile_b = false;
 
 	public:
 		EASportsWRC(std::string serverIP_l, int port_l) : SERVER_IP_s(serverIP_l), PORT_i(port_l) {}
@@ -256,10 +255,10 @@ class EASportsWRC
 		int startClient();
 		void stopClient();
 		void receiveData();
-		bool GenerateMap();
+		bool GenerateMapFromLiveData();
 		void GenerateMapFromYAML(const std::filesystem::path& filepath);
-		bool GetisReadFromFile();
 		void ClearMap();
+		bool UpdateMapFromLiveData();
 
 	private:
 		void PrintArray();
