@@ -3,6 +3,13 @@
 #include <vector>
 #include <yaml-cpp/yaml.h>
 #include <fstream>
+#include <filesystem>
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#include <string>
+#include <thread>
+
+#define EASPORTS_DATA_SIZE 53 // TODO: Increase size of data written into YAML, everything should go into it
 
 /* * * * * Type Definitions * * * * */
 
@@ -81,6 +88,9 @@ struct EAtelemetry_data_t {
 	
 	int gear;
 	
+	float shiftlightFraction;
+	float shiftlightStart;
+	float shiftlightEnd;
 	float VehSpeed;
 	float VehTransSpeed;
 	float VehPosX;
@@ -139,6 +149,9 @@ struct EAtelemetry_data_t {
 struct EAtelemetry_data_Vector_t {
 	EAtelemetrybyte_t gear;
 	
+	EAtelemetryfloat_t shiftlightFraction;
+	EAtelemetryfloat_t shiftlightStart;
+	EAtelemetryfloat_t shiftlightEnd;
 	EAtelemetryfloat_t VehSpeed;
 	EAtelemetryfloat_t VehTransSpeed;
 	EAtelemetryfloat_t VehPosX;
@@ -193,38 +206,65 @@ struct EAtelemetry_data_Vector_t {
 	EAtelemetrydouble_t lap_distance;
 };
 
+struct EAtelemetryMap_t
+{
+	EAtelemetryfloatMap_t EAtelemetryfloatMap;
+	EAtelemetrydoubleMap_t EAtelemetrydoubleMap;
+	EAtelemetrybyteMap_t EAtelemetrybyteMap;
+};
 
 //Configurable circular buffer max size
 static const size_t CircularBufferMaxSize = 1;
 
 class EASportsWRC
 {
-	public:
-		bool OnStage_b = false;
+	public:	
 		std::array<uint8_t, 265> UDPReceiveArray{};
 		EAtelemetry_data_t data; //keep, fastest way to get the latest data
 		//std::vector<EAtelemetry_data_t> TelemetryData_v;
 		EAtelemetry_data_Vector_t TelemetryData_v;
+
+		std::string  SERVER_IP_s;
+		int PORT_i;
+		SOCKET serverSocket;
+		std::thread m_NetworkThread;
+		bool isRunning_b = false;
+		EAtelemetryMap_t m_EAtelemetryMap;
+		
+
 	private:
 		struct EAcircularBuff_t {
 			uint8_t currentIndex = 0;
 			std::array<EAtelemetry_data_t, CircularBufferMaxSize> circularBuffer;
 		}EAcircularBuff_s;
-		
+		bool OnStage_b = false;
 
 	public:
+		EASportsWRC(std::string serverIP_l, int port_l) : SERVER_IP_s(serverIP_l), PORT_i(port_l) {}
+		~EASportsWRC();
+
 		void StartStage();
 		bool GetOnStage();
 		void SetOnStage(bool value);
 		float UnpackArray(EAoffset_t offset);
 		double dUnpackArray(EAoffset_t offset);
 		uint8_t bUnpackArray(EAoffset_t offset);
-		void HandleArray();
-		void StoreVector();
+		void StoreVector(const std::filesystem::path& filepath);
+		bool isOnStage();
+		void ClearArray();
+		int startClient();
+		void stopClient();
+		void receiveData();
+		bool GenerateMapFromLiveData();
+		void GenerateMapFromYAML(const std::filesystem::path& filepath);
+		void ClearMap();
+		bool UpdateMapFromLiveData();
+
 	private:
 		void PrintArray();
 		void convertSeconds2Time();
 		void AddtoCircularBuf(EAtelemetry_data_t data_s);
+		void HandleArray();
 
 };
 

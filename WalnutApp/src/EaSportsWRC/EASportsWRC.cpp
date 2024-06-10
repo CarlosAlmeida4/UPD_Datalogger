@@ -21,6 +21,9 @@ void EASportsWRC::HandleArray()
 	EAtelemetry_data_t data_s;
 	data_s.gear = (int)bUnpackArray(EAoffset_t::vehicle_gear_index);
 	
+	data_s.shiftlightFraction = UnpackArray(EAoffset_t::shiftlights_fraction);
+	data_s.shiftlightStart = UnpackArray(EAoffset_t::shiftlights_rpm_start);
+	data_s.shiftlightEnd = UnpackArray(EAoffset_t::shiftlights_rpm_end);
 	data_s.VehSpeed = UnpackArray(EAoffset_t::vehicle_speed);
 	data_s.VehTransSpeed = UnpackArray(EAoffset_t::vehicle_transmission_speed);
 	data_s.VehPosX = UnpackArray(EAoffset_t::vehicle_position_x);
@@ -78,6 +81,9 @@ void EASportsWRC::HandleArray()
 	
 	TelemetryData_v.gear.push_back(data_s.gear);
 	
+	TelemetryData_v.shiftlightFraction.push_back(data_s.shiftlightFraction);
+	TelemetryData_v.shiftlightStart.push_back(data_s.shiftlightStart);
+	TelemetryData_v.shiftlightEnd.push_back(data_s.shiftlightEnd);
 	TelemetryData_v.VehSpeed.push_back(data_s.VehSpeed);
 	TelemetryData_v.VehTransSpeed.push_back(data_s.VehTransSpeed);
 	TelemetryData_v.VehPosX.push_back(data_s.VehPosX);
@@ -134,16 +140,20 @@ void EASportsWRC::HandleArray()
 
 }
 
-void EASportsWRC::StoreVector()
+void EASportsWRC::StoreVector(const std::filesystem::path& filepath)
 {
-	YAML::Emitter out;
+	SetOnStage(false);
 
+	YAML::Emitter out;
+	
 	EAtelemetrybyteMap_t EAtelemetrybyteMap;
 	EAtelemetryfloatMap_t EAtelemetryfloatMap;
 	EAtelemetrydoubleMap_t EAtelemetrydoubleMap;
 
-	EAtelemetrybyteMap["Gear"]						= TelemetryData_v.gear						;
-	
+	EAtelemetrybyteMap["Gear"]						= TelemetryData_v.gear							;
+	EAtelemetryfloatMap["shiftLightFraction"]		= TelemetryData_v.shiftlightFraction			;
+	EAtelemetryfloatMap["shiftLightStart"]			= TelemetryData_v.shiftlightStart				;
+	EAtelemetryfloatMap["shiftLightEnd"]			= TelemetryData_v.shiftlightEnd					;
 	EAtelemetryfloatMap["Vehicle Speed"]			= TelemetryData_v.VehSpeed						;
 	EAtelemetryfloatMap["Vehicle Trans Speed"]		= TelemetryData_v.VehTransSpeed					;
 	EAtelemetryfloatMap["Vehicle Position X"]		= TelemetryData_v.VehPosX						;
@@ -220,9 +230,11 @@ void EASportsWRC::StoreVector()
 	}
 	out << YAML::EndMap;
 
-	std::ofstream fout("test.yaml");
+	std::ofstream fout(filepath);
 	fout << out.c_str();
 	
+	ClearArray();
+
 	//Clear all values from vectors run
 	/*
 	TelemetryData_v.gear.clear();
@@ -319,6 +331,190 @@ void EASportsWRC::AddtoCircularBuf(EAtelemetry_data_t data_s)
 	}
 }
 
+void EASportsWRC::ClearArray()
+{
+	SetOnStage(false);
+	//Clear all values from vectors run
+	TelemetryData_v.gear.clear();						
+	TelemetryData_v.shiftlightFraction.clear();
+	TelemetryData_v.shiftlightStart.clear();
+	TelemetryData_v.shiftlightEnd.clear();
+	TelemetryData_v.VehSpeed.clear();
+	TelemetryData_v.VehTransSpeed.clear();
+	TelemetryData_v.VehPosX.clear();
+	TelemetryData_v.VehPosY.clear();
+	TelemetryData_v.VehPosZ.clear();
+	TelemetryData_v.VehSpdX.clear();
+	TelemetryData_v.VehSpdY.clear();
+	TelemetryData_v.VehSpdZ.clear();
+	TelemetryData_v.VehAccelX.clear();
+	TelemetryData_v.VehAccelY.clear();
+	TelemetryData_v.VehAccelZ.clear();
+	TelemetryData_v.VehLeftDirX.clear();
+	TelemetryData_v.VehLeftDirY.clear();
+	TelemetryData_v.VehLeftDirZ.clear();
+	TelemetryData_v.VehFwrdDirX.clear();
+	TelemetryData_v.VehFwrdDirY.clear();
+	TelemetryData_v.VehFwrdDirZ.clear();
+	TelemetryData_v.VehUpDirX.clear();
+	TelemetryData_v.VehUpDirY.clear();
+	TelemetryData_v.VehUpDirZ.clear();
+	TelemetryData_v.HubVertPosBL.clear();
+	TelemetryData_v.HubVertPosBR.clear();
+	TelemetryData_v.HubVertPosFL.clear();
+	TelemetryData_v.HubVertPosFR.clear();
+	TelemetryData_v.HubVertSpdBL.clear();
+	TelemetryData_v.HubVertSpdBR.clear();
+	TelemetryData_v.HubVertSpdFL.clear();
+	TelemetryData_v.HubVertSpdFR.clear();
+	TelemetryData_v.WheelSpeedBL.clear();
+	TelemetryData_v.WheelSpeedBR.clear();
+	TelemetryData_v.WheelSpeedFL.clear();
+	TelemetryData_v.WheelSpeedFR.clear();
+	TelemetryData_v.stear.clear();
+	TelemetryData_v.clutch.clear();
+	TelemetryData_v.brake.clear();
+	TelemetryData_v.throttle.clear();
+	TelemetryData_v.rpm.clear();
+	TelemetryData_v.handbrake.clear();
+	TelemetryData_v.current_time.clear();
+	TelemetryData_v.current_minutes.clear();
+	TelemetryData_v.current_seconds.clear();
+	TelemetryData_v.game_total_time.clear();
+	TelemetryData_v.game_delta_time.clear();
+	TelemetryData_v.brake_temp_br.clear();
+	TelemetryData_v.brake_temp_fl.clear();
+	TelemetryData_v.brake_temp_fr.clear();
+	TelemetryData_v.brake_temp_bl.clear();
+	
+	TelemetryData_v.track_length.clear();
+	TelemetryData_v.lap_distance.clear();
+}
+
+/***
+
+Map Operations
+
+***/
+
+bool EASportsWRC::GenerateMapFromLiveData()
+{
+	ClearMap();
+	return UpdateMapFromLiveData();
+}
+
+void EASportsWRC::GenerateMapFromYAML(const std::filesystem::path& filepath)
+{
+	ClearMap();
+	YAML::Node TelemetryYAML = YAML::LoadFile(filepath.string());
+	
+	EAtelemetryMap_t l_EAtelemetryMap;
+	//std::cout << TelemetryYAML.IsSequence() << std::endl;
+	//std::cout << TelemetryYAML.IsMap() << std::endl;
+	//std::cout << TelemetryYAML.IsScalar() << std::endl;
+	//std::cout << TelemetryYAML.IsDefined() << std::endl;
+	//std::cout << TelemetryYAML.IsNull() << std::endl;
+	//for (auto it = TelemetryYAML.begin(); it != TelemetryYAML.end(); it++)
+	//{
+	//	YAML::Node response_values_map = it->as<YAML::Node>();
+	//	//std::cout << response_values_map << std::endl;
+	//}
+	for (const auto& kv : TelemetryYAML) {
+		//std::cout << kv.first.as<std::string>() << "\n"; // prints Foo
+		//std::cout << kv.second.as<std::vector>() << "\n"; // prints Foo
+		//const YAML::Node& KeyNode = kv.second;  // the value
+		std::string key = kv.first.as<std::string>();
+		if (key == "Gear")
+		{
+			l_EAtelemetryMap.EAtelemetrybyteMap[key] = kv.second.as<std::vector<int>>();
+
+		}
+		else if (key == "Track Length" || key == "Lap distance")
+		{
+			l_EAtelemetryMap.EAtelemetrydoubleMap[key] = kv.second.as<std::vector<double>>();
+		}
+		else
+		{
+			l_EAtelemetryMap.EAtelemetryfloatMap[key] = kv.second.as<std::vector<float>>();
+		}
+
+	}
+	m_EAtelemetryMap = l_EAtelemetryMap;
+}
+
+void EASportsWRC::ClearMap()
+{
+	m_EAtelemetryMap.EAtelemetrybyteMap.clear();
+	m_EAtelemetryMap.EAtelemetrydoubleMap.clear();
+	m_EAtelemetryMap.EAtelemetryfloatMap.clear();
+}
+
+bool EASportsWRC::UpdateMapFromLiveData()
+{
+	if (!TelemetryData_v.gear.empty())
+	{
+		EAtelemetryMap_t l_EAtelemetryMap;
+		l_EAtelemetryMap.EAtelemetrybyteMap["Gear"] = TelemetryData_v.gear;
+		l_EAtelemetryMap.EAtelemetryfloatMap["shiftLightFraction"] = TelemetryData_v.shiftlightFraction;
+		l_EAtelemetryMap.EAtelemetryfloatMap["shiftLightStart"] = TelemetryData_v.shiftlightStart;
+		l_EAtelemetryMap.EAtelemetryfloatMap["shiftLightEnd"] = TelemetryData_v.shiftlightEnd;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Speed"] = TelemetryData_v.VehSpeed;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Trans Speed"] = TelemetryData_v.VehTransSpeed;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Position X"] = TelemetryData_v.VehPosX;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Position Y"] = TelemetryData_v.VehPosY;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Position Z"] = TelemetryData_v.VehPosZ;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Speed X"] = TelemetryData_v.VehSpdX;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Speed Y"] = TelemetryData_v.VehSpdY;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Speed Z"] = TelemetryData_v.VehSpdZ;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Accel X"] = TelemetryData_v.VehAccelX;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Accel Y"] = TelemetryData_v.VehAccelY;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Accel Z"] = TelemetryData_v.VehAccelZ;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Left Dir X"] = TelemetryData_v.VehLeftDirX;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Left Dir Y"] = TelemetryData_v.VehLeftDirY;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Left Dir Z"] = TelemetryData_v.VehLeftDirZ;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Fwrd Dir X"] = TelemetryData_v.VehFwrdDirX;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Fwrd Dir Y"] = TelemetryData_v.VehFwrdDirY;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Fwrd Dir Z"] = TelemetryData_v.VehFwrdDirZ;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Up Dir X"] = TelemetryData_v.VehUpDirX;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Up Dir Y"] = TelemetryData_v.VehUpDirY;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Vehicle Up Dir Z"] = TelemetryData_v.VehUpDirZ;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Position BL"] = TelemetryData_v.HubVertPosBL;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Position BR"] = TelemetryData_v.HubVertPosBR;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Position FL"] = TelemetryData_v.HubVertPosFL;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Position FR"] = TelemetryData_v.HubVertPosFR;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Velocity BL"] = TelemetryData_v.HubVertSpdBL;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Velocity BR"] = TelemetryData_v.HubVertSpdBR;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Velocity FL"] = TelemetryData_v.HubVertSpdFL;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Hub Vertical Velocity FR"] = TelemetryData_v.HubVertSpdFR;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Wheel Speed BL"] = TelemetryData_v.WheelSpeedBL;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Wheel Speed BR"] = TelemetryData_v.WheelSpeedBR;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Wheel Speed FL"] = TelemetryData_v.WheelSpeedFL;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Wheel Speed FR"] = TelemetryData_v.WheelSpeedFR;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Stear"] = TelemetryData_v.stear;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Clutch"] = TelemetryData_v.clutch;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Brake"] = TelemetryData_v.brake;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Throttle"] = TelemetryData_v.throttle;
+		l_EAtelemetryMap.EAtelemetryfloatMap["RPM"] = TelemetryData_v.rpm;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Handbrake"] = TelemetryData_v.handbrake;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Current time"] = TelemetryData_v.current_time;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Current minutes"] = TelemetryData_v.current_minutes;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Current seconds"] = TelemetryData_v.current_seconds;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Game total time"] = TelemetryData_v.game_total_time;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Game delta time"] = TelemetryData_v.game_delta_time;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Brake Temp BR"] = TelemetryData_v.brake_temp_br;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Brake Temp FL"] = TelemetryData_v.brake_temp_fl;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Brake Temp FR"] = TelemetryData_v.brake_temp_fr;
+		l_EAtelemetryMap.EAtelemetryfloatMap["Brake Temp BL"] = TelemetryData_v.brake_temp_bl;
+
+		l_EAtelemetryMap.EAtelemetrydoubleMap["Track Length"] = TelemetryData_v.track_length;
+		l_EAtelemetryMap.EAtelemetrydoubleMap["Lap distance"] = TelemetryData_v.lap_distance;
+
+		m_EAtelemetryMap = l_EAtelemetryMap;
+		return true;
+	}
+	return false;
+}
+
 /***
 
 Stage Handlers
@@ -350,7 +546,7 @@ Utilities
 void EASportsWRC::PrintArray()
 {
 	//std::cout << "Speed    : " << (data.speed*3.6) << "\n" << std::flush;
-	std::cout << "Gear     : " << data.gear     << "\n" << std::flush;
+	//std::cout << "Gear     : " << data.gear     << "\n" << std::flush;
 	//std::cout << "Stear    : " << data.stear    << "\n" << std::flush;
 	//std::cout << "Clutch   : " << data.clutch   << "\n" << std::flush;
 	//std::cout << "Brake    : " << data.brake    << "\n" << std::flush;
@@ -365,8 +561,12 @@ void EASportsWRC::PrintArray()
 	//std::cout << "stage_current_time: " << data.current_time << "\n" << std::flush;
 	//std::cout << "stage_current_distance: " << data.lap_distance << "\n" << std::flush;
 	//std::cout << "stage_length: " << data.track_length << "\n" << std::flush;
+	//std::cout << "shift fraction: " << data.shiftlightFraction<< "\n" << std::flush;
+	std::cout << "shift start: " << data.shiftlightStart<< "\n" << std::flush;
+	std::cout << "shift end: " << data.shiftlightEnd<< "\n" << std::flush;
 
 }
+
 
 /***
 
@@ -380,4 +580,111 @@ void EASportsWRC::convertSeconds2Time()
 	data.current_seconds = std::fmod(data.current_time, 60);
 	data.current_minutes = data.current_time / 60;
 	//data.current_seconds = data.current_time % 60;
+}
+
+/***
+
+UDP connection
+
+***/
+
+int EASportsWRC::startClient()
+{
+	if (!isRunning_b)
+	{
+		// Initialize Winsock
+		WSADATA wsaData;
+		if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+			std::cerr << "Failed to initialize Winsock" << std::endl;
+			return 1;
+		}
+
+		// Create a UDP socket
+		serverSocket = socket(AF_INET, SOCK_DGRAM, 0);
+		if (serverSocket == INVALID_SOCKET) {
+			std::cerr << "Error creating socket" << std::endl;
+			WSACleanup();
+			return 1;
+		}
+
+		// Set up the server address
+		sockaddr_in serverAddr;
+		serverAddr.sin_family = AF_INET;
+		serverAddr.sin_addr.s_addr = INADDR_ANY;
+		serverAddr.sin_port = htons(PORT_i);
+
+		// Bind the socket to the specified port
+		if (bind(serverSocket, (const sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+			std::cerr << "Error binding socket" << std::endl;
+			closesocket(serverSocket);
+			WSACleanup();
+			return 1;
+		}
+
+		std::cout << "UDP server listening on port " << PORT_i << std::endl;
+		isRunning_b = true;
+
+		m_NetworkThread = std::thread([this]() { receiveData(); });
+
+	}
+
+}
+
+void EASportsWRC::stopClient()
+{
+	closesocket(serverSocket);
+	WSACleanup();
+	isRunning_b = false;
+	if (m_NetworkThread.joinable())
+		m_NetworkThread.join();
+}
+
+void EASportsWRC::receiveData()
+{
+	while (isRunning_b)
+	{
+		// Wait for incoming messages
+		char buffer[265];
+		uint8_t uintBuffer[265];
+		sockaddr_in clientAddr;
+		int clientAddrLen = sizeof(clientAddr);
+		int bytesRead = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (sockaddr*)&clientAddr, &clientAddrLen);
+		//int bytesRead = recvfrom(serverSocket, uintBuffer, sizeof(uintBuffer), 0, (sockaddr*)&clientAddr, &clientAddrLen);
+
+		if (bytesRead == SOCKET_ERROR) {
+			std::cerr << "Error receiving message" << std::endl;
+		}
+		else {
+			//buffer[bytesRead] = '\0';
+			//std::cout << "Size of buffer" << bytesRead << std::endl;
+			if (bytesRead <= 264) //Full size packet for Dirt Rally 2
+			{
+				//check if firts activation
+				if (!GetOnStage()) StartStage();
+				memcpy(UDPReceiveArray.data(), buffer, sizeof(buffer));
+				//std::cout << "Received message from client: " << l_DirtTwo.UDPReceiveArray.data() << std::endl;
+				HandleArray();
+			}
+			else
+			{
+				std::cout << "Received package with a different size " << sizeof(buffer) << std::endl;
+			}
+		}
+	}
+
+}
+
+/***
+
+Destructuor
+
+***/
+
+EASportsWRC::~EASportsWRC()
+{
+	closesocket(serverSocket);
+	WSACleanup();
+	isRunning_b = false;
+	if (m_NetworkThread.joinable())
+		m_NetworkThread.join();
 }
