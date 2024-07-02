@@ -88,14 +88,14 @@ void DataClientLayer::OnUIRender()
 	StageStatus();
 	if (m_ShowBrakeData) BrakeData();
 	if (m_LoadRunAndShowMultiSignalPlot) LoadRunAndMultiSignalPlot();
-	if(m_ShowDriverInputStatus) DriverInputsStatus();
+	if (m_ShowDriverInputStatus) DriverInputsStatus();
 	if (m_ShowPositionPlot) VehiclePosition();
 	if (m_ShowShiftLight) ShiftLight();
+	if (m_ShowMultiSignalPlotLive) MultiSignalPlotLive();
 	if (!l_EASportsWRC.isRunning_b)
 	{
 		l_EASportsWRC.startClient();
 	}
-
 }
 
 /***
@@ -169,6 +169,7 @@ void DataClientLayer::StageStatus()
 	if (ImGui::Button("Clear Run"))
 	{
 		l_EASportsWRC.ClearArray();
+		l_EASportsWRC.ClearMap();
 	}
 	m_StoreRunModalOpen = ImGui::BeginPopupModal("Store Run", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 	if (m_StoreRunModalOpen) { StoreRunModal(); }
@@ -476,7 +477,7 @@ void DataClientLayer::LoadRunAndMultiSignalPlot()
 				dnd[curr_id].Color = RandomColor();
 				dnd[curr_id].SignalName = key;
 				if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
-				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](double x) { return (float)x; });
 				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
 				{
 					dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
@@ -489,7 +490,7 @@ void DataClientLayer::LoadRunAndMultiSignalPlot()
 				dnd[curr_id].Color = RandomColor();
 				dnd[curr_id].SignalName = key;
 				if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
-				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+				std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](float x) { return (float)x; });
 				for (int i = 0; i < dnd[curr_id].Data.size(); i++)
 				{
 					dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
@@ -828,6 +829,217 @@ void DataClientLayer::LoadRunModal()
 	ImGui::EndPopup();
 }
 
+void DataClientLayer::MultiSignalPlotLive()
+{
+	static ImPlotSubplotFlags flags = ImPlotSubplotFlags_ShareItems | ImPlotSubplotFlags_LinkAllX;
+	static int rows = 4;
+	static int cols = 4;
+
+	static bool isSetup = true;
+
+	static bool show_rows_cols = false;
+
+	const int dnd_size = EASPORTS_DATA_SIZE;
+	static DragAndDropItem dnd[dnd_size];
+	static EAtelemetryfloat_t time;
+
+	/*------------------------------------------ Begin Setup-----------------------------------------------------------------------*/
+	if (isSetup && l_EASportsWRC.GenerateMapFromLiveData()) // Initialize dnd structures
+	{
+		// Workflow:
+		// fill DnD vector
+		// insert into list
+		// val is a vector with the data for the specified key
+		// the Data vector is a EAtelemetrydouble_t vector which takes the x (time defined above, and the data from the map file
+		// Since Data is a EAtelemetrydouble_t vector, we need to iterate over it and fill it with the vector members from the map
+
+		static int curr_id = 0;
+		time = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap["Current time"];
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap)
+		{
+			dnd[curr_id].Data.resize(val.size());
+			dnd[curr_id].Color = RandomColor();
+			dnd[curr_id].SignalName = key;
+			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](int x) { return (float)x; });
+			if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
+			for (int i = 0; i < dnd[curr_id].Data.size(); i++)
+			{
+				dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
+			}
+			curr_id++;
+		}
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap)
+		{
+			dnd[curr_id].Data.resize(val.size());
+			dnd[curr_id].Color = RandomColor();
+			dnd[curr_id].SignalName = key;
+			if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
+			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](double x) { return (float)x; });
+			for (int i = 0; i < dnd[curr_id].Data.size(); i++)
+			{
+				dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
+			}
+			curr_id++;
+		}
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap)
+		{
+			dnd[curr_id].Data.resize(val.size());
+			dnd[curr_id].Color = RandomColor();
+			dnd[curr_id].SignalName = key;
+			if (!dnd[curr_id].DataVec2.empty()) { dnd[curr_id].DataVec2.clear(); } //Clear possible previous runs
+			std::transform(val.begin(), val.end(), dnd[curr_id].Data.begin(), [](float x) { return (float)x; });
+			for (int i = 0; i < dnd[curr_id].Data.size(); i++)
+			{
+				dnd[curr_id].DataVec2.push_back(ImVec2(time[i], dnd[curr_id].Data[i]));
+			}
+			curr_id++;
+		}
+		curr_id = 0;
+		isSetup = false;
+	}
+	else if (l_EASportsWRC.UpdateMapFromLiveData()) // update everytime with latest data from the map
+	{
+		time = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap["Current time"];
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap) // loop over  map
+		{
+			for (auto & curr_dnd : dnd) // iterate over drag and drop items
+			{
+				if (curr_dnd.SignalName == key) //found corresponding dnd item to map
+				{
+					curr_dnd.DataVec2.push_back(ImVec2(time.back(), (float)val.back()));
+				}
+			}
+		}
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap) // loop over  map
+		{
+			for (auto& curr_dnd : dnd) // iterate over drag and drop items
+			{
+				if (curr_dnd.SignalName == key) //found corresponding dnd item to map
+				{
+					curr_dnd.DataVec2.push_back(ImVec2(time.back(), (float)val.back()));
+				}
+			}
+		}
+		for (auto const& [key, val] : l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap) // loop over  map
+		{
+			for (auto& curr_dnd : dnd) // iterate over drag and drop items
+			{
+				if (curr_dnd.SignalName == key) //found corresponding dnd item to map
+				{
+					curr_dnd.DataVec2.push_back(ImVec2(time.back(), (float)val.back()));
+				}
+			}
+		}
+	}
+	/*------------------------------------------ End   Setup-----------------------------------------------------------------------*/
+
+
+
+	/*------------------------------------------ Begin widgets---------------------------------------------------------------------*/
+	ImGui::Begin("Signal Plots", &m_ShowMultiSignalPlotLive, ImGuiWindowFlags_MenuBar);
+
+	/*------------------------------------------ Begin child for DnD gen-----------------------------------------------------------*/
+	// child window to serve as initial source for our DND items
+	ImGui::BeginChild("DND_LEFT", ImVec2(225, -1));
+
+	if (!l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap.empty())
+	{
+		if (ImGui::Button("Reset Data")) {
+			for (int k = 0; k < dnd_size; ++k)
+				dnd[k].Reset();
+			//dndx = dndy = NULL;
+		}
+		for (int it = 0; it < dnd_size; it++)
+		{
+			if (dnd[it].Plt > 0)
+				continue;
+			ImPlot::ItemIcon(dnd[it].Color); ImGui::SameLine();
+			ImGui::Selectable(dnd[it].SignalName.c_str(), false, 0, ImVec2(225, 0));
+			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+				ImGui::SetDragDropPayload("MY_DND", &it, sizeof(int));
+				ImPlot::ItemIcon(dnd[it].Color); ImGui::SameLine();
+				ImGui::TextUnformatted(dnd[it].SignalName.c_str());
+				ImGui::EndDragDropSource();
+			}
+		}
+	}
+
+	ImGui::EndChild();
+	/*------------------------------------------ End child for DnD gen-------------------------------------------------------------*/
+
+	/*------------------------------------------ Begin Drag and Drop target--------------------------------------------------------*/
+	if (ImGui::BeginDragDropTarget()) {
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MY_DND")) {
+			int i = *(int*)payload->Data; dnd[i].Reset();
+		}
+		ImGui::EndDragDropTarget();
+	}
+	/*------------------------------------------ End Drag and Drop target----------------------------------------------------------*/
+
+	ImGui::SameLine();
+	/*------------------------------------------ Begin Subplots--------------------------------------------------------------------*/
+	if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1, -1), flags))
+	{
+		for (int i = 0; i < rows * cols; ++i) {
+			if (ImPlot::BeginPlot("")) {
+				for (int k = 0; k < dnd_size; k++)
+				{
+					if (dnd[k].Plt == 1 && dnd[k].Data.size() > 0 && dnd[k].SubPlotId == i) {
+						ImPlot::SetAxis(dnd[k].Yax);
+						ImPlot::SetNextLineStyle(dnd[k].Color);
+						ImPlot::PlotLine(dnd[k].SignalName.c_str(), &dnd[k].DataVec2[0].x, &dnd[k].DataVec2[0].y, dnd[k].DataVec2.size(), 0, 0, 2 * sizeof(float));
+						// allow legend item labels to be DND sources
+						if (ImPlot::BeginDragDropSourceItem(dnd[k].SignalName.c_str())) {
+							ImGui::SetDragDropPayload("MY_DND", &k, sizeof(int));
+							ImPlot::ItemIcon(dnd[k].Color); ImGui::SameLine();
+							ImGui::TextUnformatted(dnd[k].SignalName.c_str());
+							ImPlot::EndDragDropSource();
+						}
+					}
+				}
+				// allow the main plot area to be a DND target
+				if (ImPlot::BeginDragDropTargetPlot()) {
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MY_DND")) {
+						int Z = *(int*)payload->Data;
+						dnd[Z].Plt = 1;
+						dnd[Z].SubPlotId = i;
+						dnd[Z].Yax = ImAxis_Y1;
+					}
+					ImPlot::EndDragDropTarget();
+				}
+				ImPlot::EndPlot();
+			}
+		}
+		ImPlot::EndSubplots();
+	}
+	/*------------------------------------------ End Subplots----------------------------------------------------------------------*/
+
+	/*------------------------------------------ Begin Top menu for config------------------------------------------------*/
+	/*Menu for changing amount of plots*/
+	if (ImGui::BeginMenuBar()) {
+		if (ImGui::BeginMenu("Config")) {
+			ImGui::MenuItem("Change Row/Columns", NULL, &show_rows_cols);
+			ImGui::EndMenu();
+		}
+		ImGui::EndMenuBar();
+	}
+	if (show_rows_cols)
+	{
+		ImGui::Begin("Configure Rows & Columns", &show_rows_cols);
+
+		ImGui::InputInt("Rows", &rows);
+		ImGui::InputInt("Columns", &cols);
+		if (ImGui::Button("Done"))
+		{
+			show_rows_cols = false;
+		}
+		ImGui::End();
+	}
+	/*------------------------------------------ End Top menu for config--------------------------------------------------*/
+
+	ImGui::End();
+}
+
 /***
 
 Getters Setters
@@ -843,3 +1055,5 @@ void DataClientLayer::SetLoadRunAndShowMultiSignalPlot(bool setval){ m_LoadRunAn
 void DataClientLayer::SetPositionPlot(bool setval){m_ShowPositionPlot = setval;}
 
 void DataClientLayer::SetShiftLight(bool setval){m_ShowShiftLight = setval;}
+
+void DataClientLayer::SetMultiSignalPlotLive(bool setval) { m_ShowMultiSignalPlotLive = setval;};
