@@ -37,31 +37,6 @@ static ImVec4 RandomColor() {
 	return col;
 }
 
-// utility structure for realtime plot
-struct ScrollingBuffer {
-	int MaxSize;
-	int Offset;
-	ImVector<ImVec2> Data;
-	ScrollingBuffer(int max_size = 2000) {
-		MaxSize = max_size;
-		Offset = 0;
-		Data.reserve(MaxSize);
-	}
-	void AddPoint(float x, float y) {
-		if (Data.size() < MaxSize)
-			Data.push_back(ImVec2(x, y));
-		else {
-			Data[Offset] = ImVec2(x, y);
-			Offset = (Offset + 1) % MaxSize;
-		}
-	}
-	void Erase() {
-		if (Data.size() > 0) {
-			Data.shrink(0);
-			Offset = 0;
-		}
-	}
-};
 
 EASportsWRC l_EASportsWRC("127.0.0.1", 20782);
 
@@ -282,35 +257,6 @@ void DataClientLayer::BrakeData()
 	ImGui::End();
 }
 
-ImPlotPoint SinewaveGetter(int i, void* data) {
-	float f = *(float*)data;
-	return ImPlotPoint(i, sinf(f * i));
-}
-
-ImPlotPoint MapGetter(int i, void* key) {
-	std::string& lkey = *(static_cast<std::string*>(key));
-	//std::cout << lkey << std::endl;
-
-	ImPlotPoint retPlotPoint;
-	if (l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap.count(lkey) > 0)
-	{
-		EAtelemetrybyte_t localVec = l_EASportsWRC.m_EAtelemetryMap.EAtelemetrybyteMap[lkey];
-		retPlotPoint = ImPlotPoint(i, localVec[i]);
-	}
-	if (l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap.count(lkey) > 0)
-	{
-		EAtelemetrydouble_t localVec = l_EASportsWRC.m_EAtelemetryMap.EAtelemetrydoubleMap[lkey];
-		retPlotPoint = ImPlotPoint(i, localVec[i]);
-	}
-	if (l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap.count(lkey) > 0)
-	{
-		EAtelemetryfloat_t localVec = l_EASportsWRC.m_EAtelemetryMap.EAtelemetryfloatMap[lkey];
-		retPlotPoint = ImPlotPoint(i, localVec[i]);
-	}
-
-	return retPlotPoint;
-}
-
 void DataClientLayer::LoadRunAndMultiSignalPlot()
 {
 	static ImPlotSubplotFlags flags = ImPlotSubplotFlags_ShareItems | ImPlotSubplotFlags_LinkAllX;
@@ -509,68 +455,23 @@ void DataClientLayer::LoadRunAndMultiSignalPlot()
 
 void DataClientLayer::VehiclePosition()
 {
-	static ScrollingBuffer PosX, PosY, PosZ, PosXZ;
-	float current_time = 0;
-	static bool isOpen;
+	static bool isSetup = true;
 
-	ImGui::Begin("Vehicle Position",&m_ShowPositionPlot);
+	static ImVector<ImVec2> VehiclePosition;
+	ImGui::Begin("Vehicle Position", &m_ShowPositionPlot);
 
-
-	if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.VehPosX.size() != 0)
+	if (ImGui::Button("Reset") || l_EASportsWRC.data.lap_distance == 0)
 	{
-		current_time = l_EASportsWRC.TelemetryData_v.current_time.back();
-
-		PosX.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.VehPosX.back());
-		PosY.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.VehPosY.back());
-		PosZ.AddPoint(current_time, l_EASportsWRC.TelemetryData_v.VehPosZ.back());
-		//TODO: find a way to represent this
-		//PosXZ.AddPoint(l_EASportsWRC.TelemetryData_v.VehPosX.back(), l_EASportsWRC.TelemetryData_v.VehPosZ.back());
+		VehiclePosition.clear();
+		//dndx = dndy = NULL;
 	}
-
-	static float history = 10.0f;
-	ImGui::SliderFloat("History", &history, 1, 30, "%.1f s");
-
-	static ImPlotAxisFlags xflags = ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_AutoFit;
-	static ImPlotAxisFlags yflags = ImPlotAxisFlags_AutoFit;
-
-	if (ImPlot::BeginPlot(" Position X ", ImVec2(-1, 150)))
+	if (ImPlot::BeginPlot("Vehicle Position", ImVec2(-1, -1)))
 	{
-		ImPlot::SetupAxes(NULL, NULL, xflags, yflags);
-		ImPlot::SetupAxisLimits(ImAxis_X1, current_time - history, current_time, ImGuiCond_Always);
-		ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1.1);
-		ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
-		if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.VehPosX.size() != 0)
-		{
-			ImPlot::PlotLine("Pos X", &PosX.Data[0].x, &PosX.Data[0].y, PosX.Data.size(), 0, PosX.Offset, 2 * sizeof(float));
-			//std::cout << "Brake Position: " << BrakePos.Data[0].y << std::endl;
-		}
-		ImPlot::EndPlot();
-	}
-
-	if (ImPlot::BeginPlot(" Position Y ", ImVec2(-1, 150)))
-	{
-		ImPlot::SetupAxes(NULL, NULL, xflags, yflags);
-		ImPlot::SetupAxisLimits(ImAxis_X1, current_time - history, current_time, ImGuiCond_Always);
-		ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1.1);
-		ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
-		if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.VehPosY.size() != 0)
-		{
-			ImPlot::PlotLine("Pos Y", &PosY.Data[0].x, &PosY.Data[0].y, PosY.Data.size(), 0, PosY.Offset, 2 * sizeof(float));
-			//std::cout << "Brake Position: " << BrakePos.Data[0].y << std::endl;
-		}
-		ImPlot::EndPlot();
-	}
-
-	if (ImPlot::BeginPlot(" Position Z ", ImVec2(-1, 150)))
-	{
-		ImPlot::SetupAxes(NULL, NULL, xflags, yflags);
-		ImPlot::SetupAxisLimits(ImAxis_X1, current_time - history, current_time, ImGuiCond_Always);
-		ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1.1);
-		ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
 		if (l_EASportsWRC.GetOnStage() && l_EASportsWRC.TelemetryData_v.VehPosZ.size() != 0)
 		{
-			ImPlot::PlotLine("Pos Z", &PosZ.Data[0].x, &PosZ.Data[0].y, PosZ.Data.size(), 0, PosZ.Offset, 2 * sizeof(float));
-			//std::cout << "Brake Position: " << BrakePos.Data[0].y << std::endl;
+			VehiclePosition.push_back(ImVec2(l_EASportsWRC.TelemetryData_v.VehPosZ.back(), l_EASportsWRC.TelemetryData_v.VehPosX.back()));
+			ImPlot::PlotLine("Vehicle Position", &VehiclePosition[0].x, &VehiclePosition[0].y, VehiclePosition.size(), 0, 0, 2 * sizeof(float));
+			
 		}
 		ImPlot::EndPlot();
 	}
