@@ -58,8 +58,8 @@ void DataClientLayer::OnDetach()
 
 void DataClientLayer::OnUIRender()
 {
-	ImGui::ShowDemoWindow();
-	ImPlot::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
+	//ImPlot::ShowDemoWindow();
 	StageStatus();
 	if (m_ShowBrakeData) BrakeData();
 	if (m_LoadRunAndShowMultiSignalPlot) LoadRunAndMultiSignalPlot();
@@ -847,8 +847,12 @@ void DataClientLayer::MultiSignalPlotLive()
 	{
 		if (ImGui::Button("Reset Data")) {
 			for (int k = 0; k < dnd_size; ++k)
+			{
 				dnd[k].Reset();
-			//dndx = dndy = NULL;
+				dnd[k].DataVec2.clear();
+				//dndx = dndy = NULL;
+			}
+				
 		}
 		for (int it = 0; it < dnd_size; it++)
 		{
